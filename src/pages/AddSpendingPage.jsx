@@ -1,15 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AppBottomNav from "../components/AppBottomNav";
 import { useTheme } from "../context/ThemeContext";
 import { useExpenses } from "../context/ExpenseContext";
+import { categoryAPI } from "../services/categoryAPI";
 
-const categories = [
-  "Food & Drinks",
-  "Education",
-  "Home Bills",
-  "Savings",
-  "Others",
-];
+const getCurrentMonthRange = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
+  return {
+    min: `${year}-${month}-01`,
+    max: `${year}-${month}-${String(lastDay).padStart(2, "0")}`,
+  };
+};
 
 const formatAmount = (value) => {
   if (!value) return "0";
@@ -24,10 +28,17 @@ const AddSpendingPage = () => {
   const { darkMode } = useTheme();
   const { addExpense } = useExpenses();
 
+  const [categories, setCategories] = useState([]);
   const [rawAmount, setRawAmount] = useState("");
   const [category, setCategory] = useState("");
   const [date, setDate] = useState("");
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    categoryAPI.getCategories().then((res) => {
+      setCategories(res.data?.categories || []);
+    }).catch(() => setCategories([]));
+  }, []);
 
   const handleKeyPress = (digit) => {
     if (digit === "clear") {
@@ -41,7 +52,7 @@ const AddSpendingPage = () => {
     setRawAmount(String(Number(next)));
   };
 
-  const handleAddExpense = () => {
+  const handleAddExpense = async () => {
     const amount = Number(rawAmount);
 
     if (!amount || amount <= 0) {
@@ -59,12 +70,16 @@ const AddSpendingPage = () => {
       return;
     }
 
-    addExpense({ amount, category, date });
-
-    setRawAmount("");
-    setCategory("");
-    setDate("");
-    setMessage("Expense added successfully.");
+    setMessage("");
+    try {
+      await addExpense({ amount, category, date });
+      setRawAmount("");
+      setCategory("");
+      setDate("");
+      setMessage("Expense added successfully.");
+    } catch (err) {
+      setMessage(err.message || "Failed to add expense. Try again.");
+    }
   };
 
   const displayAmount = formatAmount(rawAmount);
@@ -133,8 +148,8 @@ const AddSpendingPage = () => {
               >
                 <option value="">Select Category</option>
                 {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
+                  <option key={cat._id || cat.name} value={cat.name}>
+                    {cat.name}
                   </option>
                 ))}
               </select>
@@ -151,9 +166,14 @@ const AddSpendingPage = () => {
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
+                min={getCurrentMonthRange().min}
+                max={getCurrentMonthRange().max}
                 className="mt-1 w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none"
                 style={{ borderColor: inputBorder, color: textMain }}
               />
+              <p className="mt-1 text-[10px]" style={{ color: textSub }}>
+                Current month only
+              </p>
             </div>
 
             {message && (

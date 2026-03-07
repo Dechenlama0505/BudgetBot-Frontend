@@ -1,4 +1,13 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { expenseAPI } from "../services/expenseAPI";
+import { tokenService } from "../services/tokenService";
 
 const ExpenseContext = createContext();
 
@@ -27,10 +36,11 @@ const DEFAULT_CATEGORY_COLORS = {
 };
 
 export const ExpenseProvider = ({ children }) => {
-  const [expenses, setExpenses] = useState(() => {
-    const saved = localStorage.getItem("budgetbot_expenses");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [expenses, setExpenses] = useState([]);
+  const [totalExpenses, setTotalExpenses] = useState(0);
+  const [categoryTotals, setCategoryTotals] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const [categoryColors, setCategoryColors] = useState(() => {
     const saved = localStorage.getItem("budgetbot_category_colors");
@@ -38,23 +48,75 @@ export const ExpenseProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    localStorage.setItem("budgetbot_expenses", JSON.stringify(expenses));
-  }, [expenses]);
-
-  useEffect(() => {
     localStorage.setItem("budgetbot_category_colors", JSON.stringify(categoryColors));
   }, [categoryColors]);
 
-  const addExpense = ({ amount, category, date }) => {
-    const newExpense = {
-      id: Date.now().toString(),
-      amount: Number(amount),
-      category,
-      date,
-    };
+  const refreshExpenses = useCallback(async (options = {}) => {
+    if (!tokenService.isAuthenticated()) {
+      setExpenses([]);
+      setTotalExpenses(0);
+      setCategoryTotals({});
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await expenseAPI.getExpenses(options);
+      if (res.success && res.data) {
+        setExpenses(res.data.expenses || []);
+        setTotalExpenses(res.data.total ?? 0);
+        setCategoryTotals(res.data.categoryTotals || {});
+      } else {
+        setExpenses([]);
+        setTotalExpenses(0);
+        setCategoryTotals({});
+      }
+    } catch (err) {
+      setError(err.message);
+      setExpenses([]);
+      setTotalExpenses(0);
+      setCategoryTotals({});
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    setExpenses((prev) => [newExpense, ...prev]);
-  };
+  useEffect(() => {
+    refreshExpenses();
+  }, [refreshExpenses]);
+
+  const addExpense = useCallback(
+    async ({ amount, category, date }) => {
+      const numAmount = Number(amount);
+      const cat = (category && String(category).trim()) || "Others";
+      const dateObj = date ? new Date(date) : new Date();
+
+      const res = await expenseAPI.addExpense({
+        amount: numAmount,
+        category: cat,
+        date: dateObj.toISOString(),
+      });
+
+      if (res.success && res.data) {
+        const newExpense = {
+          _id: res.data._id,
+          id: res.data._id,
+          amount: res.data.amount,
+          category: res.data.category,
+          date: res.data.date,
+          createdAt: res.data.createdAt,
+        };
+        setExpenses((prev) => [newExpense, ...prev]);
+        setTotalExpenses((prev) => prev + numAmount);
+        setCategoryTotals((prev) => ({
+          ...prev,
+          [cat]: (prev[cat] || 0) + numAmount,
+        }));
+      }
+      return res;
+    },
+    []
+  );
 
   const updateCategoryColor = (category, color) => {
     setCategoryColors((prev) => ({
@@ -62,19 +124,6 @@ export const ExpenseProvider = ({ children }) => {
       [category]: color,
     }));
   };
-
-  const totalExpenses = useMemo(() => {
-    return expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  }, [expenses]);
-
-  const categoryTotals = useMemo(() => {
-    const totals = {};
-    expenses.forEach((item) => {
-      const cat = item.category || "Others";
-      totals[cat] = (totals[cat] || 0) + Number(item.amount || 0);
-    });
-    return totals;
-  }, [expenses]);
 
   const categoryBreakdown = useMemo(() => {
     return Object.entries(categoryTotals)
@@ -87,17 +136,32 @@ export const ExpenseProvider = ({ children }) => {
       .sort((a, b) => b.amount - a.amount);
   }, [categoryTotals, totalExpenses, categoryColors]);
 
+  const value = useMemo(
+    () => ({
+      expenses,
+      addExpense,
+      totalExpenses,
+      categoryBreakdown,
+      categoryColors,
+      updateCategoryColor,
+      refreshExpenses,
+      loading,
+      error,
+    }),
+    [
+      expenses,
+      addExpense,
+      totalExpenses,
+      categoryBreakdown,
+      categoryColors,
+      refreshExpenses,
+      loading,
+      error,
+    ]
+  );
+
   return (
-    <ExpenseContext.Provider
-      value={{
-        expenses,
-        addExpense,
-        totalExpenses,
-        categoryBreakdown,
-        categoryColors,
-        updateCategoryColor,
-      }}
-    >
+    <ExpenseContext.Provider value={value}>
       {children}
     </ExpenseContext.Provider>
   );

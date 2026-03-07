@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { useExpenses } from "../context/ExpenseContext";
+import { insightsAPI, getCurrentMonth } from "../services/insightsAPI";
 import AppBottomNav from "../components/AppBottomNav";
 
 const formatCurrency = (value) => {
@@ -9,9 +10,59 @@ const formatCurrency = (value) => {
   });
 };
 
+const formatMonthLabel = (yyyyMm) => {
+  const [y, m] = yyyyMm.split("-").map(Number);
+  const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${names[m - 1]} ${y}`;
+};
+
 const InsightPage = () => {
   const { darkMode } = useTheme();
-  const { totalExpenses, categoryBreakdown } = useExpenses();
+  const { categoryColors } = useExpenses();
+
+  const currentMonth = useMemo(getCurrentMonth, []);
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [insights, setInsights] = useState(null);
+  const [incomeVsSpending, setIncomeVsSpending] = useState(null);
+  const [monthLoading, setMonthLoading] = useState(false);
+
+  // Income vs Spending: fetch once on mount (same for all months)
+  useEffect(() => {
+    insightsAPI
+      .getIncomeVsSpending()
+      .then((res) => setIncomeVsSpending(res.data))
+      .catch(() => setIncomeVsSpending(null));
+  }, []);
+
+  // Insights for selected month: refetch when month changes
+  useEffect(() => {
+    setMonthLoading(true);
+    insightsAPI
+      .getInsights(selectedMonth)
+      .then((res) => setInsights(res.data))
+      .catch(() => setInsights(null))
+      .finally(() => setMonthLoading(false));
+  }, [selectedMonth]);
+
+  const goPreviousMonth = (e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    const [y, m] = selectedMonth.split("-").map(Number);
+    const d = new Date(y, m - 2, 1);
+    setSelectedMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  };
+
+  const goNextMonth = (e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (selectedMonth >= currentMonth) return;
+    const [y, m] = selectedMonth.split("-").map(Number);
+    const d = new Date(y, m, 1);
+    setSelectedMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  };
+
+  const incomeVsData = incomeVsSpending?.months ?? [];
+  const maxVal = Math.max(...incomeVsData.flatMap((m) => [m.income, m.spending]), 1);
 
   const containerBg = darkMode ? "#1E3A45" : "#E0E6E7";
   const cardBg = darkMode ? "#274956" : "#E0E6E7";
@@ -19,10 +70,31 @@ const InsightPage = () => {
   const textMain = darkMode ? "#E4EDF2" : "#265D6F";
   const textSub = darkMode ? "#C2D3DB" : "#6E828D";
 
+  const totalSpent = insights?.totalSpent ?? 0;
+  const totalBudget = insights?.totalBudget ?? 0;
+  const categoryBreakdown = insights?.categoryBreakdown ?? [];
+  const budgetUsedPercent = insights?.budgetUsedPercent ?? 0;
+
   const radius = 90;
   const circumference = 2 * Math.PI * radius;
+  const spendingPct = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
   let cumulativePercent = 0;
+
+  // Full-page loading only on very first load (no data yet)
+  if (insights === null && monthLoading) {
+    return (
+      <div
+        className="flex min-h-screen items-center justify-center"
+        style={{ backgroundColor: containerBg }}
+      >
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-[#265D6F] border-t-transparent" />
+          <p className="mt-4 text-sm text-[#265D6F]">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -34,23 +106,129 @@ const InsightPage = () => {
         style={{ backgroundColor: cardBg }}
       >
         <div className="flex-1 overflow-y-auto px-4 pt-6">
-          <h1 className="text-center text-xl font-bold" style={{ color: textMain }}>
+          <h1
+            className="text-center text-xl font-bold"
+            style={{ color: textMain }}
+          >
             Insight
           </h1>
 
+          {/* Income vs Spending Bar Chart - last 4 months */}
+          {incomeVsData.length > 0 && (
+            <div
+              className="mt-5 rounded-[24px] p-4"
+              style={{ backgroundColor: panelBg }}
+            >
+              <h2
+                className="mb-3 text-center text-sm font-semibold"
+                style={{ color: textMain }}
+              >
+                Income vs Spending
+              </h2>
+              <div className="flex items-end justify-around gap-2" style={{ minHeight: 120 }}>
+                {incomeVsData.map((m) => (
+                  <div key={m.month} className="flex flex-1 flex-col items-center gap-1">
+                    <div
+                      className="flex w-full items-end justify-center gap-0.5"
+                      style={{ height: 100 }}
+                    >
+                      <div
+                        className="w-3 rounded-t"
+                        style={{
+                          height: `${Math.max(2, (m.income / maxVal) * 90)}px`,
+                          backgroundColor: "#22c55e",
+                        }}
+                        title={`Income: Rs. ${formatCurrency(m.income)}`}
+                      />
+                      <div
+                        className="w-3 rounded-t"
+                        style={{
+                          height: `${Math.max(2, (m.spending / maxVal) * 90)}px`,
+                          backgroundColor: "#dc2626",
+                        }}
+                        title={`Spending: Rs. ${formatCurrency(m.spending)}`}
+                      />
+                    </div>
+                    <span className="text-[10px] font-medium" style={{ color: textSub }}>
+                      {m.label.split(" ")[0]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-2 flex justify-center gap-4 text-xs" style={{ color: textSub }}>
+                <span className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-[#22c55e]" /> Income
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-[#dc2626]" /> Spending
+                </span>
+              </div>
+              <div className="mt-2 overflow-x-auto">
+                <table className="w-full text-[10px]" style={{ color: textSub }}>
+                  <thead>
+                    <tr className="border-b" style={{ borderColor: panelBg }}>
+                      <th className="py-1 text-left">Month</th>
+                      <th className="py-1 text-right">Income</th>
+                      <th className="py-1 text-right">Spending</th>
+                      <th className="py-1 text-right">Net</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {incomeVsData.map((m) => (
+                      <tr key={m.month}>
+                        <td className="py-0.5">{m.label}</td>
+                        <td className="text-right">Rs. {formatCurrency(m.income)}</td>
+                        <td className="text-right">Rs. {formatCurrency(m.spending)}</td>
+                        <td
+                          className="text-right font-medium"
+                          style={{ color: m.net < 0 ? "#dc2626" : textMain }}
+                        >
+                          Rs. {formatCurrency(m.net)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Total Spending / Pie Chart - filtered by selected month */}
           <div
-            className="mt-5 rounded-[24px] p-5"
+            className="relative mt-5 rounded-[24px] p-5"
             style={{ backgroundColor: panelBg }}
           >
-            <h2 className="text-center text-sm font-semibold" style={{ color: textSub }}>
-              Total Spending
+            {monthLoading && (
+              <div
+                className="absolute inset-0 z-10 flex items-center justify-center rounded-[24px]"
+                style={{ backgroundColor: `${panelBg}E6` }}
+              >
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#265D6F] border-t-transparent" />
+              </div>
+            )}
+            <h2
+              className="text-center text-sm font-semibold"
+              style={{ color: textMain }}
+            >
+              {formatMonthLabel(selectedMonth)} — Total Spending
             </h2>
-            <p className="mt-1 text-center text-2xl font-bold" style={{ color: textMain }}>
-              NRP {formatCurrency(totalExpenses)}
+            <p
+              className="mt-1 text-center text-2xl font-bold"
+              style={{ color: textMain }}
+            >
+              NPR {formatCurrency(totalSpent)}
             </p>
+            {totalBudget > 0 && (
+              <p
+                className="mt-1 text-center text-xs"
+                style={{ color: textSub }}
+              >
+                Budget: NPR {formatCurrency(totalBudget)} — {budgetUsedPercent.toFixed(0)}% used
+              </p>
+            )}
 
             <div className="mt-6 flex justify-center">
-              {totalExpenses > 0 ? (
+              {totalSpent > 0 ? (
                 <svg width="220" height="220" viewBox="0 0 220 220">
                   <g transform="translate(110,110) rotate(-90)">
                     <circle
@@ -59,25 +237,31 @@ const InsightPage = () => {
                       stroke={darkMode ? "#1E3A45" : "#D3DCE0"}
                       strokeWidth="28"
                     />
-                    {categoryBreakdown.map((item) => {
-                      const dash = (item.percentage / 100) * circumference;
-                      const gap = circumference - dash;
-                      const offset = -((cumulativePercent / 100) * circumference);
-                      cumulativePercent += item.percentage;
-
-                      return (
-                        <circle
-                          key={item.category}
-                          r={radius}
-                          fill="transparent"
-                          stroke={item.color}
-                          strokeWidth="28"
-                          strokeDasharray={`${dash} ${gap}`}
-                          strokeDashoffset={offset}
-                          strokeLinecap="butt"
-                        />
-                      );
-                    })}
+                    {categoryBreakdown
+                      .filter((i) => i.spent > 0)
+                      .map((item) => {
+                        const pct =
+                          totalSpent > 0 ? (item.spent / totalSpent) * 100 : 0;
+                        const dash = (pct / 100) * circumference;
+                        const gap = circumference - dash;
+                        const offset =
+                          -((cumulativePercent / 100) * circumference);
+                        cumulativePercent += pct;
+                        const color =
+                          categoryColors[item.category] || "#CCCCCC";
+                        return (
+                          <circle
+                            key={item.category}
+                            r={radius}
+                            fill="transparent"
+                            stroke={color}
+                            strokeWidth="28"
+                            strokeDasharray={`${dash} ${gap}`}
+                            strokeDashoffset={offset}
+                            strokeLinecap="butt"
+                          />
+                        );
+                      })}
                   </g>
                   <text
                     x="110"
@@ -97,7 +281,7 @@ const InsightPage = () => {
                     fill={textMain}
                     fontWeight="700"
                   >
-                    NRP {formatCurrency(totalExpenses)}
+                    NPR {formatCurrency(totalSpent)}
                   </text>
                 </svg>
               ) : (
@@ -109,58 +293,142 @@ const InsightPage = () => {
                 </div>
               )}
             </div>
+            <div className="mt-3 flex justify-between">
+              <button
+                type="button"
+                onClick={goPreviousMonth}
+                className="rounded-lg px-3 py-1.5 text-sm font-medium"
+                style={{ backgroundColor: darkMode ? "#355B68" : "#A8B7C0", color: textMain }}
+              >
+                ← Previous
+              </button>
+              <button
+                type="button"
+                onClick={goNextMonth}
+                disabled={selectedMonth >= currentMonth}
+                className="rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: darkMode ? "#355B68" : "#A8B7C0", color: textMain }}
+              >
+                Next →
+              </button>
+            </div>
           </div>
 
+          {/* Spending vs Budget - Bar graphs per category */}
           <div
-            className="mt-4 rounded-[24px] p-4"
+            className="relative mt-4 rounded-[24px] p-4"
             style={{ backgroundColor: panelBg }}
           >
-            <h3 className="mb-3 text-base font-bold" style={{ color: textMain }}>
-              Spending Summary
+            {monthLoading && (
+              <div
+                className="absolute inset-0 z-10 flex items-center justify-center rounded-[24px]"
+                style={{ backgroundColor: `${panelBg}E6` }}
+              >
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#265D6F] border-t-transparent" />
+              </div>
+            )}
+            <h3
+              className="mb-3 text-base font-bold"
+              style={{ color: textMain }}
+            >
+              {formatMonthLabel(selectedMonth)} — Spending vs Budget
             </h3>
 
             {categoryBreakdown.length === 0 ? (
               <p className="text-sm" style={{ color: textSub }}>
-                Add spending to see your chart summary.
+                Add spending and set budget to see insights.
               </p>
             ) : (
-              <div className="space-y-4">
-                {categoryBreakdown.map((item) => (
-                  <div key={item.category}>
-                    <div className="mb-1 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="h-3 w-3 rounded-full"
-                          style={{ backgroundColor: item.color }}
-                        />
-                        <span className="text-sm font-semibold" style={{ color: textMain }}>
-                          {item.category}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-semibold" style={{ color: textMain }}>
-                          {item.percentage.toFixed(1)}%
-                        </div>
-                        <div className="text-xs" style={{ color: textSub }}>
-                          NRP {formatCurrency(item.amount)}
-                        </div>
-                      </div>
-                    </div>
+              <div className="space-y-5">
+                {categoryBreakdown.map((item) => {
+                  const color =
+                    categoryColors[item.category] || "#CCCCCC";
+                  const maxVal = Math.max(
+                    item.budgetAmount,
+                    item.spent,
+                    1
+                  );
+                  const budgetWidth =
+                    (item.budgetAmount / maxVal) * 100;
+                  const spentWidth = (item.spent / maxVal) * 100;
+                  const barBg = darkMode ? "#1E3A45" : "#D3DCE0";
+                  const spentBarColor = item.crossed ? "#dc2626" : color;
 
+                  return (
                     <div
-                      className="h-3 w-full overflow-hidden rounded-full"
-                      style={{ backgroundColor: darkMode ? "#1E3A45" : "#D3DCE0" }}
+                      key={item.category}
+                      className="rounded-xl border p-3"
+                      style={{
+                        backgroundColor: darkMode
+                          ? "#1E3A45"
+                          : "#E8EDF0",
+                        borderColor: darkMode ? "#355B68" : "#D3DCE0",
+                      }}
                     >
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${item.percentage}%`,
-                          backgroundColor: item.color,
-                        }}
-                      />
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="h-3 w-3 rounded-full"
+                            style={{ backgroundColor: color }}
+                          />
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: textMain }}
+                          >
+                            {item.category}
+                            {item.crossed && (
+                              <span className="ml-1 text-xs text-red-600">
+                                (over budget)
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Budget bar */}
+                      <div className="mb-1">
+                        <div className="mb-0.5 flex justify-between text-xs" style={{ color: textSub }}>
+                          <span>Budget</span>
+                          <span>Rs. {formatCurrency(item.budgetAmount)}</span>
+                        </div>
+                        <div
+                          className="h-4 w-full overflow-hidden rounded"
+                          style={{ backgroundColor: barBg }}
+                        >
+                          <div
+                            className="h-full rounded transition-all"
+                            style={{
+                              width: `${budgetWidth}%`,
+                              backgroundColor: darkMode
+                                ? "#4A6B78"
+                                : "#9CA8B0",
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Spent bar */}
+                      <div>
+                        <div className="mb-0.5 flex justify-between text-xs" style={{ color: textSub }}>
+                          <span>Spent</span>
+                          <span>Rs. {formatCurrency(item.spent)}</span>
+                        </div>
+                        <div
+                          className="h-4 w-full overflow-hidden rounded"
+                          style={{ backgroundColor: barBg }}
+                        >
+                          <div
+                            className="h-full rounded transition-all"
+                            style={{
+                              width: `${spentWidth}%`,
+                              backgroundColor: spentBarColor,
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

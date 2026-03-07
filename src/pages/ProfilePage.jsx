@@ -246,7 +246,7 @@ const ProfilePage = () => {
             {/* Manage categories */}
             <button
               type="button"
-              onClick={() => navigate("/manage-categories")}
+              onClick={() => navigate("/categories")}
               className="flex w-full items-center justify-between border-t py-2 text-sm font-semibold"
               style={{ borderColor: panelBg, color: textMain }}
             >

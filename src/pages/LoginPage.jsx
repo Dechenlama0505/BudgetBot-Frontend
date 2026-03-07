@@ -195,9 +195,14 @@ const LoginPage = () => {
 
           {/* bottom section like Figma */}
           <div className="mt-8 flex flex-col items-center gap-4">
-            <p className="text-xs font-semibold text-[#E2EDF2]">
+            <button
+              type="button"
+              onClick={() => navigate("/forgot-password")}
+              className="text-xs font-semibold text-[#E2EDF2] hover:underline"
+              disabled={isLoading}
+            >
               Forgot Password?
-            </p>
+            </button>
 
             <button
               type="submit"
