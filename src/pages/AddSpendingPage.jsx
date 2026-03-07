@@ -1,0 +1,213 @@
+import React, { useState } from "react";
+import AppBottomNav from "../components/AppBottomNav";
+import { useTheme } from "../context/ThemeContext";
+import { useExpenses } from "../context/ExpenseContext";
+
+const categories = [
+  "Food & Drinks",
+  "Education",
+  "Home Bills",
+  "Savings",
+  "Others",
+];
+
+const formatAmount = (value) => {
+  if (!value) return "0";
+  const num = Number(value);
+  if (Number.isNaN(num)) return "0";
+  return num.toLocaleString("en-IN", {
+    maximumFractionDigits: 0,
+  });
+};
+
+const AddSpendingPage = () => {
+  const { darkMode } = useTheme();
+  const { addExpense } = useExpenses();
+
+  const [rawAmount, setRawAmount] = useState("");
+  const [category, setCategory] = useState("");
+  const [date, setDate] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleKeyPress = (digit) => {
+    if (digit === "clear") {
+      setRawAmount("");
+      return;
+    }
+
+    if (rawAmount.length >= 12) return;
+
+    const next = rawAmount + digit;
+    setRawAmount(String(Number(next)));
+  };
+
+  const handleAddExpense = () => {
+    const amount = Number(rawAmount);
+
+    if (!amount || amount <= 0) {
+      setMessage("Please enter an amount.");
+      return;
+    }
+
+    if (!category) {
+      setMessage("Please select a category.");
+      return;
+    }
+
+    if (!date) {
+      setMessage("Please select a date.");
+      return;
+    }
+
+    addExpense({ amount, category, date });
+
+    setRawAmount("");
+    setCategory("");
+    setDate("");
+    setMessage("Expense added successfully.");
+  };
+
+  const displayAmount = formatAmount(rawAmount);
+
+  const containerBg = darkMode ? "#1E3A45" : "#E0E6E7";
+  const topPanelBg = darkMode ? "#274956" : "#A8B7C0";
+  const innerBg = darkMode ? "#2F5A68" : "#E0E6E7";
+  const numpadBg = darkMode ? "#274956" : "#A8B7C0";
+  const numKeyBg = darkMode ? "#2F5A68" : "#E0E6E7";
+  const textMain = darkMode ? "#E4EDF2" : "#265D6F";
+  const textSub = darkMode ? "#C2D3DB" : "#6E828D";
+  const inputBorder = darkMode ? "#3B6A78" : "#C4CFD4";
+
+  return (
+    <div
+      className="flex min-h-screen items-center justify-center"
+      style={{ backgroundColor: containerBg }}
+    >
+      <div
+        className="flex h-[896px] w-[414px] max-w-full flex-col rounded-[32px] shadow-[0_20px_40px_rgba(0,0,0,0.25)]"
+        style={{ backgroundColor: containerBg }}
+      >
+        <div className="flex-1 px-4 pt-5">
+          <div
+            className="mb-4 flex items-center justify-center rounded-t-[24px] px-4 py-3"
+            style={{ backgroundColor: topPanelBg }}
+          >
+            <img
+              src="/budgetbotlogoHome.png"
+              alt="BudgetBot"
+              className="h-8 w-8 object-contain"
+            />
+          </div>
+
+          <div
+            className="rounded-b-[24px] px-4 pb-4"
+            style={{ backgroundColor: innerBg }}
+          >
+            <div className="mb-6 flex flex-col items-center pt-2">
+              <span
+                className="text-xs font-semibold tracking-wide"
+                style={{ color: textSub }}
+              >
+                NRP
+              </span>
+              <h1
+                className="mt-1 text-3xl font-bold tracking-wide"
+                style={{ color: textMain }}
+              >
+                NRP {displayAmount}
+              </h1>
+            </div>
+
+            <div className="mb-4">
+              <label
+                className="block text-xs font-semibold"
+                style={{ color: textSub }}
+              >
+                Category
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="mt-1 w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none"
+                style={{ borderColor: inputBorder, color: textMain }}
+              >
+                <option value="">Select Category</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-4">
+              <label
+                className="block text-xs font-semibold"
+                style={{ color: textSub }}
+              >
+                Date
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="mt-1 w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none"
+                style={{ borderColor: inputBorder, color: textMain }}
+              />
+            </div>
+
+            {message && (
+              <p className="mb-3 text-center text-sm" style={{ color: textSub }}>
+                {message}
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={handleAddExpense}
+              className="mb-4 w-full rounded-md bg-[#265D6F] py-3 text-sm font-semibold text-[#E0E6E7]"
+            >
+              Add Expense
+            </button>
+          </div>
+
+          <div
+            className="mt-4 rounded-[24px] px-4 py-5"
+            style={{ backgroundColor: numpadBg }}
+          >
+            <div className="grid grid-cols-3 gap-4">
+              {["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].map(
+                (digit, index) => (
+                  <button
+                    key={digit + index}
+                    type="button"
+                    onClick={() => handleKeyPress(digit)}
+                    className="flex h-16 items-center justify-center rounded-lg text-xl font-semibold"
+                    style={{ backgroundColor: numKeyBg, color: textMain }}
+                  >
+                    {digit}
+                  </button>
+                )
+              )}
+
+              <div />
+
+              <button
+                type="button"
+                onClick={() => handleKeyPress("clear")}
+                className="flex h-16 items-center justify-center rounded-lg text-xl font-semibold"
+                style={{ backgroundColor: numKeyBg, color: textMain }}
+              >
+                ⌫
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <AppBottomNav />
+      </div>
+    </div>
+  );
+};
+
+export default AddSpendingPage;
