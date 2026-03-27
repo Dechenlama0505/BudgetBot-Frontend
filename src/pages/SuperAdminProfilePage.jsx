@@ -8,8 +8,7 @@ import { useTheme } from "../context/ThemeContext";
 
 const SuperAdminProfilePage = () => {
   const navigate = useNavigate();
-  const { darkMode, toggleDarkMode } = useTheme();
-  const [notificationsOn, setNotificationsOn] = useState(true);
+  const { darkMode } = useTheme();
   const [profileImage, setProfileImage] = useState(null);
   const [displayName, setDisplayName] = useState("Superadmin");
   const [displayEmail, setDisplayEmail] = useState("Loading...");
@@ -79,6 +78,12 @@ const SuperAdminProfilePage = () => {
       bottomNav={<SuperAdminBottomNav />}
     >
       <div className="flex-1 overflow-y-auto px-4 pt-5 pb-4">
+        <div className="mb-4">
+          <p className="text-xs uppercase tracking-[0.2em]" style={{ color: textSub }}>
+            Superadmin Profile
+          </p>
+        </div>
+
         <div className="relative flex flex-col items-center rounded-[28px] pt-20 pb-7" style={{ backgroundColor: panelBg }}>
           <label className="absolute top-4 flex h-24 w-24 cursor-pointer items-center justify-center rounded-full bg-white shadow-md">
             {profileImage ? (
@@ -115,49 +120,11 @@ const SuperAdminProfilePage = () => {
         </div>
 
         <div className="mt-4 rounded-[18px] border px-5 py-2" style={{ backgroundColor: cardBg, borderColor: panelBg }}>
-          <div className="flex items-center justify-between border-b py-2" style={{ borderColor: panelBg }}>
-            <span className="text-sm font-semibold" style={{ color: textMain }}>
-              Notifications
-            </span>
-            <button
-              type="button"
-              onClick={() => setNotificationsOn((value) => !value)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                notificationsOn ? "bg-[#2A5B6C]" : "bg-[#C4CFD4]"
-              }`}
-            >
-              <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
-                  notificationsOn ? "translate-x-5" : "translate-x-1"
-                }`}
-              />
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between py-2">
-            <span className="text-sm font-semibold" style={{ color: textMain }}>
-              Dark Mode
-            </span>
-            <button
-              type="button"
-              onClick={toggleDarkMode}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                darkMode ? "bg-[#2A5B6C]" : "bg-[#C4CFD4]"
-              }`}
-            >
-              <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
-                  darkMode ? "translate-x-5" : "translate-x-1"
-                }`}
-              />
-            </button>
-          </div>
-
           <button
             type="button"
             onClick={() => navigate("/superadmin/admins")}
-            className="flex w-full items-center justify-between border-t py-2 text-sm font-semibold"
-            style={{ borderColor: panelBg, color: textMain }}
+            className="flex w-full items-center justify-between py-2 text-sm font-semibold"
+            style={{ color: textMain }}
           >
             <span>Manage Admins</span>
             <span style={{ color: textSub }}>{">"}</span>

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import MobileAppFrame from "../components/MobileAppFrame";
 import SuperAdminBottomNav from "../components/SuperAdminBottomNav";
 import { authAPI } from "../services/authAPI";
@@ -8,22 +7,65 @@ import { adminManagementAPI } from "../services/adminManagementAPI";
 import { tokenService } from "../services/tokenService";
 import { useTheme } from "../context/ThemeContext";
 
+const recentMembers = [
+  {
+    id: "recent_mem_001",
+    fullName: "Aarav Sharma",
+    email: "aarav@gmail.com",
+    status: "active",
+  },
+  {
+    id: "recent_mem_002",
+    fullName: "Nisha Thapa",
+    email: "nisha@gmail.com",
+    status: "pending",
+  },
+  {
+    id: "recent_mem_003",
+    fullName: "Maya Singh",
+    email: "maya@gmail.com",
+    status: "inactive",
+  },
+];
+
 const SuperAdminDashboardPage = () => {
-  const navigate = useNavigate();
   const { darkMode } = useTheme();
   const [displayName, setDisplayName] = useState("Superadmin");
   const [membersCount, setMembersCount] = useState(0);
   const [adminsCount, setAdminsCount] = useState(0);
+  const [activity, setActivity] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const formatMemberActivity = (entry) => {
+    const [name, status] = (entry.message || "")
+      .split("->")
+      .map((value) => value?.trim());
+
+    if (!name || !status) return entry.message;
+
+    if (status === "added") return `Member "${name}" was added`;
+    if (status === "updated") return `Member "${name}" was updated`;
+    if (status === "deleted") return `Member "${name}" was deleted`;
+
+    return `Member "${name}" was marked ${status}`;
+  };
 
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const [profileResponse, membersResponse, adminsResponse] = await Promise.all([
+        const [
+          profileResponse,
+          membersResponse,
+          adminsResponse,
+          memberActivityResponse,
+          adminActivityResponse,
+        ] = await Promise.all([
           authAPI.getProfile(),
           memberManagementAPI.listMembers(),
           adminManagementAPI.listAdmins(),
+          memberManagementAPI.listRecentActivity(5),
+          adminManagementAPI.listRecentActivity(5),
         ]);
 
         const currentUser = profileResponse.data?.user;
@@ -31,6 +73,18 @@ const SuperAdminDashboardPage = () => {
         setDisplayName(currentUser?.fullName || "Superadmin");
         setMembersCount((membersResponse.data?.members || []).length);
         setAdminsCount((adminsResponse.data?.admins || []).length);
+
+        const nextActivity = [
+          ...(memberActivityResponse.data?.activity || []).map((entry) => ({
+            ...entry,
+            message: formatMemberActivity(entry),
+          })),
+          ...(adminActivityResponse.data?.activity || []),
+        ]
+          .sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt))
+          .slice(0, 3);
+
+        setActivity(nextActivity);
       } catch (loadError) {
         setError(loadError.message || "Failed to load superadmin dashboard.");
       } finally {
@@ -109,49 +163,66 @@ const SuperAdminDashboardPage = () => {
         </section>
 
         <section className="mt-4 rounded-[22px] px-5 py-4" style={{ backgroundColor: cardBg }}>
-          <h2 className="text-sm font-semibold" style={{ color: textMain }}>
-            Management Areas
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold" style={{ color: textMain }}>
+              Recent Activity
+            </h2>
+          </div>
 
-          <div className="mt-4 space-y-3">
-            {[
-              {
-                title: "Members",
-                description: "Full CRUD for member accounts.",
-                path: "/superadmin/members",
-              },
-              {
-                title: "Admins",
-                description: "Create, update, and remove admin accounts.",
-                path: "/superadmin/admins",
-              },
-              {
-                title: "Profile",
-                description: "Review your superadmin account details.",
-                path: "/superadmin/profile",
-              },
-            ].map((item) => (
-              <button
-                key={item.title}
-                type="button"
-                onClick={() => navigate(item.path)}
-                className="w-full rounded-[18px] px-4 py-4 text-left"
+          {error ? (
+            <p className="mt-4 text-sm text-red-600">{error}</p>
+          ) : activity.length ? (
+            <div className="mt-3 space-y-3">
+              {activity.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="rounded-[18px] px-4 py-4"
+                  style={{ backgroundColor: panelBg }}
+                >
+                  <p className="text-sm font-semibold" style={{ color: textMain }}>
+                    {entry.message}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-[18px] border border-dashed border-[#C4CFD4] px-4 py-8 text-center text-sm text-[#6E828D]">
+              No recent activity yet.
+            </div>
+          )}
+        </section>
+
+        <section className="mt-4 rounded-[22px] px-5 py-4" style={{ backgroundColor: cardBg }}>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold" style={{ color: textMain }}>
+              Recent Members
+            </h2>
+          </div>
+
+          <div className="mt-3 space-y-3">
+            {recentMembers.map((member) => (
+              <div
+                key={member.id}
+                className="rounded-[18px] px-4 py-4"
                 style={{ backgroundColor: panelBg }}
               >
-                <p className="text-sm font-semibold" style={{ color: textMain }}>
-                  {item.title}
-                </p>
-                <p className="mt-1 text-xs" style={{ color: textSub }}>
-                  {item.description}
-                </p>
-              </button>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: textMain }}>
+                      {member.fullName}
+                    </p>
+                    <p className="mt-1 text-xs" style={{ color: textSub }}>
+                      {member.email}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-[#D8EEE5] px-3 py-1 text-[11px] font-semibold text-[#215C42]">
+                    {member.status}
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
         </section>
-
-        {error ? (
-          <p className="mt-4 text-sm text-red-600">{error}</p>
-        ) : null}
       </div>
     </MobileAppFrame>
   );

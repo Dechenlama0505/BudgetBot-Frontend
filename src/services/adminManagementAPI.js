@@ -1,4 +1,5 @@
 const STORAGE_KEY = "bb_admins_collection";
+const ACTIVITY_KEY = "bb_admins_activity";
 
 const defaultAdmins = [
   {
@@ -14,6 +15,21 @@ const defaultAdmins = [
     email: "daniel@gmail.com",
     role: "admin",
     status: "active",
+  },
+];
+
+const defaultActivity = [
+  {
+    id: "adm_act_001",
+    type: "admin created",
+    message: `Admin "Dechen" was created`,
+    createdAt: "2026-03-27T09:20:00.000Z",
+  },
+  {
+    id: "adm_act_002",
+    type: "admin updated",
+    message: `Admin "Sofia" was updated`,
+    createdAt: "2026-03-26T16:10:00.000Z",
   },
 ];
 
@@ -38,6 +54,45 @@ const readAdmins = () => {
 const writeAdmins = (admins) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(admins));
   return admins;
+};
+
+const readActivity = () => {
+  const rawActivity = localStorage.getItem(ACTIVITY_KEY);
+
+  if (!rawActivity) {
+    localStorage.setItem(ACTIVITY_KEY, JSON.stringify(defaultActivity));
+    return defaultActivity;
+  }
+
+  try {
+    return JSON.parse(rawActivity);
+  } catch {
+    localStorage.setItem(ACTIVITY_KEY, JSON.stringify(defaultActivity));
+    return defaultActivity;
+  }
+};
+
+const writeActivity = (activity) => {
+  localStorage.setItem(ACTIVITY_KEY, JSON.stringify(activity));
+  return activity;
+};
+
+const addActivity = (type, message) => {
+  const nextActivity = [
+    {
+      id: `adm_act_${Date.now()}`,
+      type,
+      message,
+      createdAt: new Date().toISOString(),
+    },
+    ...readActivity(),
+  ].slice(0, 10);
+
+  writeActivity(nextActivity);
+};
+
+const getShortName = (fullName = "") => {
+  return fullName.trim().split(" ")[0] || fullName;
 };
 
 const filterAdmins = (admins, search = "") => {
@@ -77,6 +132,7 @@ export const adminManagementAPI = {
     };
 
     writeAdmins([newAdmin, ...admins]);
+    addActivity("admin created", `Admin "${getShortName(newAdmin.fullName)}" was created`);
 
     return {
       data: {
@@ -105,6 +161,10 @@ export const adminManagementAPI = {
 
     writeAdmins(admins);
 
+    if (updatedAdmin) {
+      addActivity("admin updated", `Admin "${getShortName(updatedAdmin.fullName)}" was updated`);
+    }
+
     return {
       data: {
         admin: updatedAdmin,
@@ -114,11 +174,26 @@ export const adminManagementAPI = {
 
   deleteAdmin: async (adminId) => {
     await wait();
-    writeAdmins(readAdmins().filter((admin) => admin.id !== adminId));
+    const admin = readAdmins().find((entry) => entry.id === adminId);
+    writeAdmins(readAdmins().filter((entry) => entry.id !== adminId));
+
+    if (admin) {
+      addActivity("admin deleted", `Admin "${getShortName(admin.fullName)}" was deleted`);
+    }
 
     return {
       data: {
         success: true,
+      },
+    };
+  },
+
+  listRecentActivity: async (limit = 3) => {
+    await wait();
+
+    return {
+      data: {
+        activity: readActivity().slice(0, limit),
       },
     };
   },

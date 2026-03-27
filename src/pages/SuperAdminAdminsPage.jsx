@@ -178,7 +178,7 @@ const SuperAdminAdminsPage = () => {
               {admins.map((admin) => (
                 <div
                   key={admin.id}
-                  className="rounded-[20px] px-4 py-4"
+                  className="rounded-[20px] px-4 py-3"
                   style={{ backgroundColor: panelBg }}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -195,11 +195,7 @@ const SuperAdminAdminsPage = () => {
                     </span>
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between">
-                    <p className="text-xs" style={{ color: textSub }}>
-                      Role: admin
-                    </p>
-
+                  <div className="mt-2.5 flex items-center justify-end">
                     <div className="flex gap-2">
                       <button
                         type="button"
