@@ -51,10 +51,9 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Clear previous credential errors
+
     setErrors((prev) => ({ ...prev, credentials: "" }));
-    
+
     if (!validate()) return;
 
     setIsLoading(true);
@@ -65,11 +64,9 @@ const LoginPage = () => {
         password: password,
       });
 
-      // Store the token
       tokenService.setToken(response.data.token);
-
-      // Navigate to home page
-      navigate("/home");
+      tokenService.setUser(response.data.user);
+      navigate(tokenService.getHomePath());
     } catch (error) {
       setErrors((prev) => ({
         ...prev,

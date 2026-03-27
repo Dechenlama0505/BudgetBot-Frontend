@@ -1,0 +1,160 @@
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import MobileAppFrame from "../components/MobileAppFrame";
+import SuperAdminBottomNav from "../components/SuperAdminBottomNav";
+import { authAPI } from "../services/authAPI";
+import { memberManagementAPI } from "../services/memberManagementAPI";
+import { adminManagementAPI } from "../services/adminManagementAPI";
+import { tokenService } from "../services/tokenService";
+import { useTheme } from "../context/ThemeContext";
+
+const SuperAdminDashboardPage = () => {
+  const navigate = useNavigate();
+  const { darkMode } = useTheme();
+  const [displayName, setDisplayName] = useState("Superadmin");
+  const [membersCount, setMembersCount] = useState(0);
+  const [adminsCount, setAdminsCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        const [profileResponse, membersResponse, adminsResponse] = await Promise.all([
+          authAPI.getProfile(),
+          memberManagementAPI.listMembers(),
+          adminManagementAPI.listAdmins(),
+        ]);
+
+        const currentUser = profileResponse.data?.user;
+        tokenService.setUser(currentUser);
+        setDisplayName(currentUser?.fullName || "Superadmin");
+        setMembersCount((membersResponse.data?.members || []).length);
+        setAdminsCount((adminsResponse.data?.admins || []).length);
+      } catch (loadError) {
+        setError(loadError.message || "Failed to load superadmin dashboard.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, []);
+
+  const containerBg = darkMode ? "#1E3A45" : "#E0E6E7";
+  const cardBg = darkMode ? "#274956" : "#A8B7C0";
+  const panelBg = darkMode ? "#21414D" : "#E0E6E7";
+  const textMain = darkMode ? "#E4EDF2" : "#265D6F";
+  const textSub = darkMode ? "#C2D3DB" : "#6E828D";
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#E0E6E7]">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-[#265D6F] border-t-transparent" />
+          <p className="mt-4 text-sm text-[#265D6F]">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <MobileAppFrame
+      backgroundColor={containerBg}
+      bottomNav={<SuperAdminBottomNav />}
+    >
+      <div className="flex-1 overflow-y-auto px-4 pt-5 pb-4">
+        <section className="rounded-[28px] px-6 py-5" style={{ backgroundColor: cardBg }}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: textSub }}>
+                Superadmin Dashboard
+              </p>
+              <h1 className="mt-2 text-2xl font-semibold" style={{ color: textMain }}>
+                Hello, {displayName}
+              </h1>
+              <p className="mt-2 text-sm" style={{ color: textSub }}>
+                Oversee members and admins from the same mobile-first interface.
+              </p>
+            </div>
+            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[#2A5B6C]">
+              <img
+                src="/budgetbotlogoHome.png"
+                alt="BudgetBot logo"
+                className="h-11 w-11 object-contain"
+              />
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-4 grid grid-cols-3 gap-3">
+          {[
+            { label: "Members", value: membersCount },
+            { label: "Admins", value: adminsCount },
+            { label: "Total", value: membersCount + adminsCount },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="rounded-[22px] px-4 py-4"
+              style={{ backgroundColor: cardBg }}
+            >
+              <p className="text-[11px]" style={{ color: textSub }}>
+                {item.label}
+              </p>
+              <p className="mt-2 text-xl font-semibold" style={{ color: textMain }}>
+                {item.value}
+              </p>
+            </div>
+          ))}
+        </section>
+
+        <section className="mt-4 rounded-[22px] px-5 py-4" style={{ backgroundColor: cardBg }}>
+          <h2 className="text-sm font-semibold" style={{ color: textMain }}>
+            Management Areas
+          </h2>
+
+          <div className="mt-4 space-y-3">
+            {[
+              {
+                title: "Members",
+                description: "Full CRUD for member accounts.",
+                path: "/superadmin/members",
+              },
+              {
+                title: "Admins",
+                description: "Create, update, and remove admin accounts.",
+                path: "/superadmin/admins",
+              },
+              {
+                title: "Profile",
+                description: "Review your superadmin account details.",
+                path: "/superadmin/profile",
+              },
+            ].map((item) => (
+              <button
+                key={item.title}
+                type="button"
+                onClick={() => navigate(item.path)}
+                className="w-full rounded-[18px] px-4 py-4 text-left"
+                style={{ backgroundColor: panelBg }}
+              >
+                <p className="text-sm font-semibold" style={{ color: textMain }}>
+                  {item.title}
+                </p>
+                <p className="mt-1 text-xs" style={{ color: textSub }}>
+                  {item.description}
+                </p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {error ? (
+          <p className="mt-4 text-sm text-red-600">{error}</p>
+        ) : null}
+      </div>
+    </MobileAppFrame>
+  );
+};
+
+export default SuperAdminDashboardPage;

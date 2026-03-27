@@ -12,7 +12,7 @@ const ForgotPasswordPage = () => {
 
   const validate = () => {
     if (!email.trim()) {
-      setError("E-mail is required.");
+      setError("test.");
       return false;
     }
     if (!/^[^\s@]+@gmail\.com$/i.test(email.trim())) {
@@ -31,7 +31,7 @@ const ForgotPasswordPage = () => {
     setIsLoading(true);
     try {
       const response = await authAPI.forgotPassword(email);
-      setSuccessMessage(response.message || "If an account exists with this email, you will receive a reset link shortly. Check your inbox.");
+      setSuccessMessage(response.message || "test");
     } catch (err) {
       setError(err.message || "Request failed. Please try again.");
     } finally {

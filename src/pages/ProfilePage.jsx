@@ -19,6 +19,7 @@ const ProfilePage = () => {
   const [displayEmail, setDisplayEmail] = useState("Loading...");
   const [monthlyIncome, setMonthlyIncome] = useState(null);
   const [profilePictureUrl, setProfilePictureUrl] = useState(null);
+  
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch user profile on component mount
@@ -32,6 +33,8 @@ const ProfilePage = () => {
 
         const response = await authAPI.getProfile();
         const user = response.data.user;
+
+        tokenService.setUser(user);
 
         setDisplayName(user.fullName);
         setDisplayEmail(user.email);
@@ -75,7 +78,7 @@ const ProfilePage = () => {
   };
 
   const handleLogout = () => {
-    tokenService.removeToken();
+    tokenService.logout();
     navigate("/");
   };
 
@@ -253,6 +256,8 @@ const ProfilePage = () => {
               <span>Manage Categories</span>
               <span style={{ color: textSub }}>{">"}</span>
             </button>
+
+      
           </div>
 
           {/* Settings block 2 */}
