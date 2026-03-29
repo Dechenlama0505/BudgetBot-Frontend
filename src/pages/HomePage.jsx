@@ -6,6 +6,7 @@ import AppBottomNav from "../components/AppBottomNav";
 import { authAPI } from "../services/authAPI";
 import { budgetAPI } from "../services/budgetAPI";
 import { expenseAPI } from "../services/expenseAPI";
+import { insightsAPI } from "../services/insightsAPI";
 import { tokenService } from "../services/tokenService";
 import { useTheme } from "../context/ThemeContext";
 
@@ -18,6 +19,26 @@ const formatMonthLabel = (yyyyMm) => {
   const [y, m] = yyyyMm.split("-").map(Number);
   const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   return `${names[m - 1]} ${y}`;
+};
+
+const getPredictionPriority = (prediction) => {
+  const status = String(prediction?.status || "").toLowerCase();
+  const overrunPercent = Number(prediction?.overrunPercent || 0);
+
+  if (status.includes("high")) return 4;
+  if (status.includes("exceed") || status.includes("overrun")) return 3;
+  if (overrunPercent > 0) return 2;
+  return 1;
+};
+
+const getTopPrediction = (predictions) => {
+  if (!predictions.length) return null;
+
+  return [...predictions].sort((a, b) => {
+    const priorityDiff = getPredictionPriority(b) - getPredictionPriority(a);
+    if (priorityDiff !== 0) return priorityDiff;
+    return Number(b.overrunPercent || 0) - Number(a.overrunPercent || 0);
+  })[0];
 };
 
 const HomePage = () => {
@@ -37,6 +58,9 @@ const HomePage = () => {
   const [saveError, setSaveError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [predictionLoading, setPredictionLoading] = useState(false);
+  const [predictionError, setPredictionError] = useState("");
+  const [topPrediction, setTopPrediction] = useState(null);
 
   const currentMonth = useMemo(() => getCurrentMonth(), []);
 
@@ -102,6 +126,27 @@ const HomePage = () => {
     };
     fetchMonthData();
   }, [selectedMonth, budgetCategories]);
+
+  useEffect(() => {
+    if (!tokenService.isAuthenticated()) return;
+
+    const fetchPredictions = async () => {
+      try {
+        setPredictionLoading(true);
+        setPredictionError("");
+        const response = await insightsAPI.getBudgetPredictions(selectedMonth);
+        const predictions = Array.isArray(response.data) ? response.data : [];
+        setTopPrediction(getTopPrediction(predictions));
+      } catch (error) {
+        setTopPrediction(null);
+        setPredictionError(error.message || "Failed to load AI insight");
+      } finally {
+        setPredictionLoading(false);
+      }
+    };
+
+    fetchPredictions();
+  }, [selectedMonth]);
 
 
   // Show loading state while fetching profile
@@ -338,6 +383,49 @@ const HomePage = () => {
                 Rs. {remaining.toLocaleString()}
               </span>
               <span>Rs. 0</span>
+            </div>
+          </section>
+
+          <section
+            className="mb-4 rounded-[22px] px-6 py-4"
+            style={{ backgroundColor: cardBg }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3
+                  className="text-sm font-semibold"
+                  style={{ color: textMain }}
+                >
+                  AI Budget Alert
+                </h3>
+                {predictionLoading ? (
+                  <p className="mt-2 text-[11px]" style={{ color: textSub }}>
+                    Loading AI insight...
+                  </p>
+                ) : predictionError ? (
+                  <p className="mt-2 text-[11px]" style={{ color: "#dc2626" }}>
+                    {predictionError}
+                  </p>
+                ) : topPrediction ? (
+                  <p className="mt-2 text-[11px] leading-5" style={{ color: textSub }}>
+                    {topPrediction.message}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-[11px]" style={{ color: textSub }}>
+                    No AI insights available for this month.
+                  </p>
+                )}
+              </div>
+
+              {!predictionLoading && !predictionError && topPrediction && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/insight")}
+                  className="shrink-0 rounded-full bg-[#265D6F] px-3 py-2 text-[11px] font-semibold text-[#E0E6E7]"
+                >
+                  View Insights
+                </button>
+              )}
             </div>
           </section>
 

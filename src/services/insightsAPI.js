@@ -41,6 +41,19 @@ export const insightsAPI = {
     }
     return data;
   },
+
+  getBudgetPredictions: async (month) => {
+    const m = month || getCurrentMonth();
+    const response = await fetch(`${API_BASE_URL}/api/insights/predictions?month=${m}`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to get budget predictions");
+    }
+    return data;
+  },
 };
 
 export { getCurrentMonth };

@@ -16,6 +16,33 @@ const formatMonthLabel = (yyyyMm) => {
   return `${names[m - 1]} ${y}`;
 };
 
+const getPredictionStatusTone = (prediction) => {
+  const status = String(prediction?.status || "").toLowerCase();
+  const overrunPercent = Number(prediction?.overrunPercent || 0);
+
+  if (status.includes("high")) {
+    return {
+      text: "#dc2626",
+      pillBg: "#FEE2E2",
+      pillText: "#B91C1C",
+    };
+  }
+
+  if (status.includes("exceed") || status.includes("overrun") || overrunPercent > 0) {
+    return {
+      text: "#C2410C",
+      pillBg: "#FFEDD5",
+      pillText: "#C2410C",
+    };
+  }
+
+  return {
+    text: "#15803D",
+    pillBg: "#DCFCE7",
+    pillText: "#15803D",
+  };
+};
+
 const InsightPage = () => {
   const { darkMode } = useTheme();
   const { categoryColors } = useExpenses();
@@ -25,6 +52,9 @@ const InsightPage = () => {
   const [insights, setInsights] = useState(null);
   const [incomeVsSpending, setIncomeVsSpending] = useState(null);
   const [monthLoading, setMonthLoading] = useState(false);
+  const [predictionLoading, setPredictionLoading] = useState(false);
+  const [predictionError, setPredictionError] = useState("");
+  const [predictions, setPredictions] = useState([]);
 
   // Income vs Spending: fetch once on mount (same for all months)
   useEffect(() => {
@@ -42,6 +72,19 @@ const InsightPage = () => {
       .then((res) => setInsights(res.data))
       .catch(() => setInsights(null))
       .finally(() => setMonthLoading(false));
+  }, [selectedMonth]);
+
+  useEffect(() => {
+    setPredictionLoading(true);
+    setPredictionError("");
+    insightsAPI
+      .getBudgetPredictions(selectedMonth)
+      .then((res) => setPredictions(Array.isArray(res.data) ? res.data : []))
+      .catch((error) => {
+        setPredictions([]);
+        setPredictionError(error.message || "Failed to load AI budget forecast");
+      })
+      .finally(() => setPredictionLoading(false));
   }, [selectedMonth]);
 
   const goPreviousMonth = (e) => {
@@ -77,7 +120,6 @@ const InsightPage = () => {
 
   const radius = 90;
   const circumference = 2 * Math.PI * radius;
-  const spendingPct = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
   let cumulativePercent = 0;
 
@@ -426,6 +468,123 @@ const InsightPage = () => {
                           />
                         </div>
                       </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div
+            className="relative mt-4 mb-4 rounded-[24px] p-4"
+            style={{ backgroundColor: panelBg }}
+          >
+            {predictionLoading && (
+              <div
+                className="absolute inset-0 z-10 flex items-center justify-center rounded-[24px]"
+                style={{ backgroundColor: `${panelBg}E6` }}
+              >
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#265D6F] border-t-transparent" />
+              </div>
+            )}
+
+            <h3
+              className="text-base font-bold"
+              style={{ color: textMain }}
+            >
+              AI Budget Forecast
+            </h3>
+            <p
+              className="mt-1 text-xs"
+              style={{ color: textSub }}
+            >
+              {formatMonthLabel(selectedMonth)} prediction by category
+            </p>
+
+            {predictionError ? (
+              <p className="mt-4 text-sm" style={{ color: "#dc2626" }}>
+                {predictionError}
+              </p>
+            ) : !predictionLoading && predictions.length === 0 ? (
+              <p className="mt-4 text-sm" style={{ color: textSub }}>
+                No AI budget predictions available for this month.
+              </p>
+            ) : (
+              <div className="mt-4 space-y-4">
+                {predictions.map((item) => {
+                  const tone = getPredictionStatusTone(item);
+                  const color = categoryColors[item.category] || "#265D6F";
+
+                  return (
+                    <div
+                      key={item.category}
+                      className="rounded-xl border p-4"
+                      style={{
+                        backgroundColor: darkMode ? "#1E3A45" : "#E8EDF0",
+                        borderColor: darkMode ? "#355B68" : "#D3DCE0",
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="h-3 w-3 rounded-full"
+                            style={{ backgroundColor: color }}
+                          />
+                          <h4
+                            className="text-sm font-semibold"
+                            style={{ color: textMain }}
+                          >
+                            {item.category}
+                          </h4>
+                        </div>
+
+                        <span
+                          className="rounded-full px-3 py-1 text-[10px] font-semibold"
+                          style={{
+                            backgroundColor: darkMode ? "#355B68" : tone.pillBg,
+                            color: darkMode ? "#E4EDF2" : tone.pillText,
+                          }}
+                        >
+                          {item.status || "On track"}
+                        </span>
+                      </div>
+
+                      <div
+                        className="mt-4 grid grid-cols-2 gap-3 text-xs"
+                        style={{ color: textSub }}
+                      >
+                        <div className="rounded-lg px-3 py-2" style={{ backgroundColor: darkMode ? "#274956" : "#DCE4E8" }}>
+                          <p>Budget</p>
+                          <p className="mt-1 text-sm font-semibold" style={{ color: textMain }}>
+                            Rs. {formatCurrency(item.budget)}
+                          </p>
+                        </div>
+                        <div className="rounded-lg px-3 py-2" style={{ backgroundColor: darkMode ? "#274956" : "#DCE4E8" }}>
+                          <p>Spent so far</p>
+                          <p className="mt-1 text-sm font-semibold" style={{ color: textMain }}>
+                            Rs. {formatCurrency(item.spentSoFar)}
+                          </p>
+                        </div>
+                        <div className="rounded-lg px-3 py-2" style={{ backgroundColor: darkMode ? "#274956" : "#DCE4E8" }}>
+                          <p>Predicted final spend</p>
+                          <p className="mt-1 text-sm font-semibold" style={{ color: textMain }}>
+                            Rs. {formatCurrency(item.predictedFinalSpend)}
+                          </p>
+                        </div>
+                        <div className="rounded-lg px-3 py-2" style={{ backgroundColor: darkMode ? "#274956" : "#DCE4E8" }}>
+                          <p>Overrun</p>
+                          <p className="mt-1 text-sm font-semibold" style={{ color: tone.text }}>
+                            {Number(item.overrunPercent || 0)}%
+                          </p>
+                        </div>
+                      </div>
+
+                      <p
+                        className="mt-4 text-xs leading-5"
+                        style={{ color: tone.text }}
+                      >
+                        {item.message}
+                      </p>
                     </div>
                   );
                 })}
