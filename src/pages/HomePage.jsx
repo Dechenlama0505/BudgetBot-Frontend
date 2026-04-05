@@ -1,5 +1,5 @@
 // src/pages/HomePage.jsx
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import AppBottomNav from "../components/AppBottomNav";
@@ -60,6 +60,7 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [predictionLoading, setPredictionLoading] = useState(false);
   const [predictionError, setPredictionError] = useState("");
+  const [predictionInfo, setPredictionInfo] = useState("");
   const [topPrediction, setTopPrediction] = useState(null);
 
   const currentMonth = useMemo(() => getCurrentMonth(), []);
@@ -127,26 +128,30 @@ const HomePage = () => {
     fetchMonthData();
   }, [selectedMonth, budgetCategories]);
 
-  useEffect(() => {
+  const loadPredictions = useCallback(async () => {
     if (!tokenService.isAuthenticated()) return;
-
-    const fetchPredictions = async () => {
-      try {
-        setPredictionLoading(true);
-        setPredictionError("");
-        const response = await insightsAPI.getBudgetPredictions(selectedMonth);
-        const predictions = Array.isArray(response.data) ? response.data : [];
-        setTopPrediction(getTopPrediction(predictions));
-      } catch (error) {
-        setTopPrediction(null);
-        setPredictionError(error.message || "Failed to load AI insight");
-      } finally {
-        setPredictionLoading(false);
+    try {
+      setPredictionLoading(true);
+      setPredictionError("");
+      setPredictionInfo("");
+      const response = await insightsAPI.getBudgetPredictions(selectedMonth);
+      const predictions = Array.isArray(response.data) ? response.data : [];
+      setTopPrediction(getTopPrediction(predictions));
+      if (response.budgetRequired && response.message) {
+        setPredictionInfo(response.message);
       }
-    };
-
-    fetchPredictions();
+    } catch (error) {
+      setTopPrediction(null);
+      setPredictionInfo("");
+      setPredictionError(error.message || "Failed to load AI insight");
+    } finally {
+      setPredictionLoading(false);
+    }
   }, [selectedMonth]);
+
+  useEffect(() => {
+    loadPredictions();
+  }, [loadPredictions]);
 
 
   // Show loading state while fetching profile
@@ -170,6 +175,9 @@ const HomePage = () => {
   const maxBudget = monthlyIncome ?? 0;
   const budgetUsedPct = totalBudget > 0 ? Math.min(100, (monthExpenses / totalBudget) * 100) : 0;
   const remaining = (monthlyIncome ?? 0) - monthExpenses;
+  /** Rs. next to sliders: use saved total budget, or preview as % of income until user sets total */
+  const budgetBaseForCategoryDisplay =
+    totalBudget > 0 ? totalBudget : maxBudget > 0 ? maxBudget : 0;
 
   const goPrevMonth = () => {
     const [y, m] = selectedMonth.split("-").map(Number);
@@ -202,6 +210,10 @@ const HomePage = () => {
   const handleSaveBudget = async () => {
     setSaveMessage("");
     setSaveError("");
+    if (totalBudget <= 0) {
+      setSaveError('Set "This Month\'s Budget" above first (sliders use that total when saving).');
+      return;
+    }
     const allocSum = Object.values(allocations).reduce((a, b) => a + b, 0);
     if (allocSum > 100) {
       setSaveError("Total allocation cannot exceed 100%");
@@ -214,6 +226,7 @@ const HomePage = () => {
         allocations,
       });
       setSaveMessage("Budget saved successfully.");
+      loadPredictions();
     } catch (err) {
       setSaveError(err.message || "Failed to save budget");
     }
@@ -406,6 +419,10 @@ const HomePage = () => {
                   <p className="mt-2 text-[11px]" style={{ color: "#dc2626" }}>
                     {predictionError}
                   </p>
+                ) : predictionInfo ? (
+                  <p className="mt-2 text-[11px] leading-5" style={{ color: textSub }}>
+                    {predictionInfo}
+                  </p>
                 ) : topPrediction ? (
                   <p className="mt-2 text-[11px] leading-5" style={{ color: textSub }}>
                     {topPrediction.message}
@@ -446,11 +463,15 @@ const HomePage = () => {
             >
               Allocate your total budget (100%) across categories
             </p>
-            {totalBudget > 0 && (
+            {totalBudget > 0 ? (
               <p className="mt-1 text-[10px]" style={{ color: textSub }}>
                 Total budget: Rs. {totalBudget.toLocaleString()} — e.g. 10% = Rs. {(totalBudget * 0.1).toLocaleString()}
               </p>
-            )}
+            ) : maxBudget > 0 ? (
+              <p className="mt-1 text-[10px]" style={{ color: textSub }}>
+                Amounts show as % of your income (Rs. {maxBudget.toLocaleString()}) until you set &quot;This Month&apos;s Budget&quot; above.
+              </p>
+            ) : null}
 
             <div
               className="mt-6 space-y-6 text-sm"
@@ -463,7 +484,7 @@ const HomePage = () => {
               ) : (
                 budgetCategories.map((catName) => {
                   const pct = allocations[catName] ?? 0;
-                  const amount = totalBudget > 0 ? (totalBudget * pct) / 100 : 0;
+                  const amount = (budgetBaseForCategoryDisplay * pct) / 100;
                   return (
                     <div key={catName}>
                       <div className="flex items-center justify-between">

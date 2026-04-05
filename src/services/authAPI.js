@@ -1,123 +1,127 @@
-export const API_BASE_URL = 'http://localhost:5001';
+export const API_BASE_URL = "http://localhost:5000";
 
 export const authAPI = {
   signup: async (userData) => {
     const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(userData),
     });
-    
+
     const data = await response.json();
-    
+
     if (!response.ok) {
-      throw new Error(data.message || 'Signup failed');
+      throw new Error(data.message || "Signup failed");
     }
-    
+
     return data;
   },
-  
+
   login: async (credentials) => {
     const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(credentials),
     });
-    
+
     const data = await response.json();
-    
+
     if (!response.ok) {
-      throw new Error(data.message || 'Login failed');
+      throw new Error(data.message || "Login failed");
     }
-    
+
     return data;
   },
 
   getProfile: async () => {
-    const token = localStorage.getItem('auth_token');
-    
+    const token = localStorage.getItem("auth_token");
+
     const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
     });
-    
+
     const data = await response.json();
-    
+
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to fetch profile');
+      throw new Error(data.message || "Failed to fetch profile");
     }
-    
+
     return data;
   },
 
   updateProfile: async (fullName, monthlyIncome, profilePicture) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem("auth_token");
     const formData = new FormData();
-    
+
     if (fullName) {
-      formData.append('fullName', fullName);
+      formData.append("fullName", fullName);
     }
-    
-    if (monthlyIncome !== null && monthlyIncome !== undefined && monthlyIncome !== '') {
-      formData.append('monthlyIncome', monthlyIncome);
+
+    if (
+      monthlyIncome !== null &&
+      monthlyIncome !== undefined &&
+      monthlyIncome !== ""
+    ) {
+      formData.append("monthlyIncome", monthlyIncome);
     }
-    
+
     if (profilePicture) {
-      formData.append('profilePicture', profilePicture);
+      formData.append("profilePicture", profilePicture);
     }
-    
+
     const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: formData,
     });
-    
+
     const data = await response.json();
-    
+
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to update profile');
+      throw new Error(data.message || "Failed to update profile");
     }
-    
+
     return data;
   },
 
   deleteProfilePicture: async () => {
-    const token = localStorage.getItem('auth_token');
-    
+    const token = localStorage.getItem("auth_token");
+
     const response = await fetch(`${API_BASE_URL}/api/auth/profile/picture`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
     });
-    
+
     const data = await response.json();
-    
+
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to delete profile picture');
+      throw new Error(data.message || "Failed to delete profile picture");
     }
-    
+
     return data;
   },
 
   changePassword: async (currentPassword, newPassword, confirmNewPassword) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem("auth_token");
 
     const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         currentPassword,
@@ -129,7 +133,7 @@ export const authAPI = {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to change password');
+      throw new Error(data.message || "Failed to change password");
     }
 
     return data;
@@ -137,9 +141,9 @@ export const authAPI = {
 
   forgotPassword: async (email) => {
     const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ email: email.trim() }),
     });
@@ -147,7 +151,7 @@ export const authAPI = {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Request failed');
+      throw new Error(data.message || "Request failed");
     }
 
     return data;
@@ -155,9 +159,9 @@ export const authAPI = {
 
   resetPassword: async (email, token, newPassword, confirmNewPassword) => {
     const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         email,
@@ -170,7 +174,7 @@ export const authAPI = {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to reset password');
+      throw new Error(data.message || "Failed to reset password");
     }
 
     return data;

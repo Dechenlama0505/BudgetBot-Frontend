@@ -54,6 +54,7 @@ const InsightPage = () => {
   const [monthLoading, setMonthLoading] = useState(false);
   const [predictionLoading, setPredictionLoading] = useState(false);
   const [predictionError, setPredictionError] = useState("");
+  const [predictionInfo, setPredictionInfo] = useState("");
   const [predictions, setPredictions] = useState([]);
 
   // Income vs Spending: fetch once on mount (same for all months)
@@ -77,11 +78,18 @@ const InsightPage = () => {
   useEffect(() => {
     setPredictionLoading(true);
     setPredictionError("");
+    setPredictionInfo("");
     insightsAPI
       .getBudgetPredictions(selectedMonth)
-      .then((res) => setPredictions(Array.isArray(res.data) ? res.data : []))
+      .then((res) => {
+        setPredictions(Array.isArray(res.data) ? res.data : []);
+        if (res.budgetRequired && res.message) {
+          setPredictionInfo(res.message);
+        }
+      })
       .catch((error) => {
         setPredictions([]);
+        setPredictionInfo("");
         setPredictionError(error.message || "Failed to load AI budget forecast");
       })
       .finally(() => setPredictionLoading(false));
@@ -505,6 +513,10 @@ const InsightPage = () => {
               <p className="mt-4 text-sm" style={{ color: "#dc2626" }}>
                 {predictionError}
               </p>
+            ) : predictionInfo ? (
+              <p className="mt-4 text-sm leading-relaxed" style={{ color: textSub }}>
+                {predictionInfo}
+              </p>
             ) : !predictionLoading && predictions.length === 0 ? (
               <p className="mt-4 text-sm" style={{ color: textSub }}>
                 No AI budget predictions available for this month.
@@ -545,7 +557,9 @@ const InsightPage = () => {
                             color: darkMode ? "#E4EDF2" : tone.pillText,
                           }}
                         >
-                          {item.status || "On track"}
+                          {Number(item.overrunPercent) > 0
+                            ? `${item.status || "On track"} (+${item.overrunPercent}%)`
+                            : item.status || "Safe (0%)"}
                         </span>
                       </div>
 
