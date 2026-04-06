@@ -4,6 +4,7 @@ import SuperAdminBottomNav from "../components/SuperAdminBottomNav";
 import EntityFormModal from "../components/EntityFormModal";
 import { adminManagementAPI } from "../services/adminManagementAPI";
 import { useTheme } from "../context/ThemeContext";
+import { showError, showSuccess } from "../utils/toastUtils";
 
 const initialForm = {
   fullName: "",
@@ -94,15 +95,20 @@ const SuperAdminAdminsPage = () => {
 
     try {
       if (editingAdminId) {
-        await adminManagementAPI.updateAdmin(editingAdminId, formValues);
+        const response = await adminManagementAPI.updateAdmin(
+          editingAdminId,
+          formValues
+        );
+        showSuccess(response.data?.message || "Admin updated successfully");
       } else {
-        await adminManagementAPI.createAdmin(formValues);
+        const response = await adminManagementAPI.createAdmin(formValues);
+        showSuccess(response.data?.message || "Admin created successfully");
       }
 
       closeModal();
       loadAdmins(search);
     } catch (submitError) {
-      setFormError(submitError.message || "Failed to save admin.");
+      setFormError(showError(submitError, "Failed to save admin."));
     } finally {
       setIsSubmitting(false);
     }
@@ -113,10 +119,11 @@ const SuperAdminAdminsPage = () => {
     if (!confirmed) return;
 
     try {
-      await adminManagementAPI.deleteAdmin(adminId);
+      const response = await adminManagementAPI.deleteAdmin(adminId);
+      showSuccess(response.data?.message || "Admin deleted successfully");
       loadAdmins(search);
     } catch (deleteError) {
-      setError(deleteError.message || "Failed to delete admin.");
+      setError(showError(deleteError, "Failed to delete admin."));
     }
   };
 

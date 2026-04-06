@@ -137,6 +137,7 @@ export const adminManagementAPI = {
     return {
       data: {
         admin: newAdmin,
+        message: "Admin created successfully",
       },
     };
   },
@@ -168,6 +169,7 @@ export const adminManagementAPI = {
     return {
       data: {
         admin: updatedAdmin,
+        message: "Admin updated successfully",
       },
     };
   },
@@ -184,6 +186,7 @@ export const adminManagementAPI = {
     return {
       data: {
         success: true,
+        message: "Admin deleted successfully",
       },
     };
   },

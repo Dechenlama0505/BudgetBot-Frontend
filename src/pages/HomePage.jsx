@@ -9,6 +9,7 @@ import { expenseAPI } from "../services/expenseAPI";
 import { insightsAPI } from "../services/insightsAPI";
 import { tokenService } from "../services/tokenService";
 import { useTheme } from "../context/ThemeContext";
+import { showError, showSuccess } from "../utils/toastUtils";
 
 const getCurrentMonth = () => {
   const now = new Date();
@@ -220,15 +221,17 @@ const HomePage = () => {
       return;
     }
     try {
-      await budgetAPI.saveBudget({
+      const response = await budgetAPI.saveBudget({
         month: selectedMonth,
         totalAmount: totalBudget,
         allocations,
       });
-      setSaveMessage("Budget saved successfully.");
+      const message = response.message || "Budget saved successfully.";
+      setSaveMessage(message);
+      showSuccess(message);
       loadPredictions();
     } catch (err) {
-      setSaveError(err.message || "Failed to save budget");
+      setSaveError(showError(err, "Failed to save budget"));
     }
   };
 

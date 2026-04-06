@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authAPI } from "../services/authAPI";
 import { tokenService } from "../services/tokenService";
+import { showError, showSuccess } from "../utils/toastUtils";
 
 const CreateAccount = () => {
   const navigate = useNavigate();
@@ -93,10 +94,12 @@ const CreateAccount = () => {
 
       tokenService.setToken(response.data.token);
       tokenService.setUser(response.data.user);
-
+      showSuccess(response.data.message || "Account created successfully");
       navigate(tokenService.getHomePath());
     } catch (error) {
-      setApiError(error.message || "Failed to create account. Please try again.");
+      setApiError(
+        showError(error, "Failed to create account. Please try again.")
+      );
     } finally {
       setIsLoading(false);
     }

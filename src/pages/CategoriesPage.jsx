@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import AppBottomNav from "../components/AppBottomNav";
 import { categoryAPI } from "../services/categoryAPI";
 import { authAPI } from "../services/authAPI";
 import { tokenService } from "../services/tokenService";
 import { useTheme } from "../context/ThemeContext";
+import { showError, showSuccess } from "../utils/toastUtils";
 
 const CategoriesPage = () => {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ const CategoriesPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!tokenService.isAuthenticated()) {
       navigate("/login");
       return;
@@ -38,11 +39,11 @@ const CategoriesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     fetchData();
-  }, [navigate]);
+  }, [fetchData]);
 
   const handleDotClick = (id) => {
     setOpenMenuId((current) => (current === id ? null : id));
@@ -54,8 +55,11 @@ const CategoriesPage = () => {
       const next = [...budgetCategories, categoryName];
       const res = await categoryAPI.updateBudgetCategories(next);
       setBudgetCategories(res.data?.user?.budgetCategories || next);
+      showSuccess(
+        res.message || "Category added to your budget successfully."
+      );
     } catch (err) {
-      setError(err.message);
+      setError(showError(err, "Failed to update budget categories"));
     }
   };
 
@@ -65,8 +69,11 @@ const CategoriesPage = () => {
       const next = budgetCategories.filter((c) => c !== categoryName);
       const res = await categoryAPI.updateBudgetCategories(next);
       setBudgetCategories(res.data?.user?.budgetCategories || next);
+      showSuccess(
+        res.message || "Category removed from your budget successfully."
+      );
     } catch (err) {
-      setError(err.message);
+      setError(showError(err, "Failed to update budget categories"));
     }
   };
 

@@ -5,6 +5,7 @@ import AppBottomNav from "../components/AppBottomNav";
 import { API_BASE_URL, authAPI } from "../services/authAPI";
 import { tokenService } from "../services/tokenService";
 import { useTheme } from "../context/ThemeContext";
+import { showError, showSuccess } from "../utils/toastUtils";
 
 const EditProfilePage = () => {
   const navigate = useNavigate();
@@ -106,8 +107,11 @@ const EditProfilePage = () => {
       setError("");
 
       if (profilePictureUrl) {
-        await authAPI.deleteProfilePicture();
+        const response = await authAPI.deleteProfilePicture();
         setProfilePictureUrl(null);
+        showSuccess(
+          response.data?.message || "Profile picture removed successfully!"
+        );
       }
 
       setSelectedFile(null);
@@ -116,7 +120,7 @@ const EditProfilePage = () => {
 
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
-      setError(error.message || "Failed to remove profile picture");
+      setError(showError(error, "Failed to remove profile picture"));
     }
   };
 
@@ -137,7 +141,10 @@ const EditProfilePage = () => {
         selectedFile
       );
 
-      setSuccessMessage("Profile updated successfully!");
+      const successMessage =
+        response.data?.message || "Profile updated successfully!";
+      setSuccessMessage(successMessage);
+      showSuccess(successMessage);
 
       const updatedUser = response.data.user;
       setFullName(updatedUser.fullName);
@@ -156,7 +163,7 @@ const EditProfilePage = () => {
         navigate("/profile");
       }, 1500);
     } catch (error) {
-      setError(error.message || "Failed to update profile. Please try again.");
+      setError(showError(error, "Failed to update profile. Please try again."));
     } finally {
       setIsSaving(false);
     }
@@ -175,7 +182,6 @@ const EditProfilePage = () => {
 
   const containerBg = darkMode ? "#1E3A45" : "#E0E6E7";
   const headerBg = darkMode ? "#274956" : "#A8B7C0";
-  const cardBg = darkMode ? "#2F5A68" : "#E0E6E7";
   const textMain = darkMode ? "#E4EDF2" : "#265D6F";
   const textSub = darkMode ? "#C2D3DB" : "#6E828D";
   const inputBorder = darkMode ? "#3B6A78" : "#C4CFD4";

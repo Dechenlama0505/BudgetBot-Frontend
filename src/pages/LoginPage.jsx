@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { tokenService } from "../services/tokenService";
 import { authAPI } from "../services/authAPI";
+import { showError, showSuccess } from "../utils/toastUtils";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -66,11 +67,13 @@ const LoginPage = () => {
 
       tokenService.setToken(response.data.token);
       tokenService.setUser(response.data.user);
+      showSuccess(response.data.message || "Login successful");
       navigate(tokenService.getHomePath());
     } catch (error) {
+      const message = showError(error, "Invalid e-mail or password.");
       setErrors((prev) => ({
         ...prev,
-        credentials: error.message || "Invalid e-mail or password.",
+        credentials: message,
       }));
     } finally {
       setIsLoading(false);

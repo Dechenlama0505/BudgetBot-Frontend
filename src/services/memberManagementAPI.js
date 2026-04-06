@@ -179,6 +179,7 @@ export const memberManagementAPI = {
     return {
       data: {
         member: newMember,
+        message: "Member created successfully",
       },
     };
   },
@@ -209,6 +210,7 @@ export const memberManagementAPI = {
     return {
       data: {
         member: updatedMember,
+        message: "Member updated successfully",
       },
     };
   },
@@ -238,6 +240,7 @@ export const memberManagementAPI = {
     return {
       data: {
         member: updatedMember,
+        message: "Member status updated successfully",
       },
     };
   },
@@ -267,6 +270,7 @@ export const memberManagementAPI = {
     return {
       data: {
         member: approvedMember,
+        message: "Member approved successfully",
       },
     };
   },
@@ -296,6 +300,7 @@ export const memberManagementAPI = {
     return {
       data: {
         member: rejectedMember,
+        message: "Member rejected successfully",
       },
     };
   },
@@ -312,6 +317,7 @@ export const memberManagementAPI = {
     return {
       data: {
         success: true,
+        message: "Member deleted successfully",
       },
     };
   },

@@ -5,6 +5,7 @@ import AppBottomNav from "../components/AppBottomNav";
 import { authAPI } from "../services/authAPI";
 import { tokenService } from "../services/tokenService";
 import { useTheme } from "../context/ThemeContext";
+import { showError, showSuccess } from "../utils/toastUtils";
 
 const ChangePasswordPage = () => {
   const navigate = useNavigate();
@@ -66,14 +67,20 @@ const ChangePasswordPage = () => {
 
     setIsSaving(true);
     try {
-      await authAPI.changePassword(currentPassword, newPassword, confirmNewPassword);
-      setSuccessMessage("Password changed successfully!");
+      const response = await authAPI.changePassword(
+        currentPassword,
+        newPassword,
+        confirmNewPassword
+      );
+      const message = response.data?.message || "Password changed successfully!";
+      setSuccessMessage(message);
+      showSuccess(message);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmNewPassword("");
       setTimeout(() => navigate("/profile"), 1500);
     } catch (err) {
-      setError(err.message || "Failed to change password. Please try again.");
+      setError(showError(err, "Failed to change password. Please try again."));
     } finally {
       setIsSaving(false);
     }

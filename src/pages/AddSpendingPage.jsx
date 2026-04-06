@@ -3,6 +3,7 @@ import AppBottomNav from "../components/AppBottomNav";
 import { useTheme } from "../context/ThemeContext";
 import { useExpenses } from "../context/ExpenseContext";
 import { categoryAPI } from "../services/categoryAPI";
+import { showError, showSuccess } from "../utils/toastUtils";
 
 const getCurrentMonthRange = () => {
   const now = new Date();
@@ -56,29 +57,38 @@ const AddSpendingPage = () => {
     const amount = Number(rawAmount);
 
     if (!amount || amount <= 0) {
-      setMessage("Please enter an amount.");
+      const nextMessage = "Please enter an amount.";
+      setMessage(nextMessage);
+      showError(nextMessage);
       return;
     }
 
     if (!category) {
-      setMessage("Please select a category.");
+      const nextMessage = "Please select a category.";
+      setMessage(nextMessage);
+      showError(nextMessage);
       return;
     }
 
     if (!date) {
-      setMessage("Please select a date.");
+      const nextMessage = "Please select a date.";
+      setMessage(nextMessage);
+      showError(nextMessage);
       return;
     }
 
     setMessage("");
     try {
-      await addExpense({ amount, category, date });
+      const response = await addExpense({ amount, category, date });
+      const successMessage =
+        response.message || "Expense added successfully.";
       setRawAmount("");
       setCategory("");
       setDate("");
-      setMessage("Expense added successfully.");
+      setMessage(successMessage);
+      showSuccess(successMessage);
     } catch (err) {
-      setMessage(err.message || "Failed to add expense. Try again.");
+      setMessage(showError(err, "Failed to add expense. Try again."));
     }
   };
 

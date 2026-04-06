@@ -5,6 +5,7 @@ import { authAPI } from "../services/authAPI";
 import { superAdminAPI } from "../services/superAdminAPI";
 import { tokenService } from "../services/tokenService";
 import { useTheme } from "../context/ThemeContext";
+import { showError } from "../utils/toastUtils";
 
 const SuperAdminDashboardPage = () => {
   const { darkMode } = useTheme();
@@ -38,6 +39,7 @@ const SuperAdminDashboardPage = () => {
         setActivity((activityResponse.data || stats.recentActivity || []).slice(0, 3));
       } catch (loadError) {
         setError(loadError.message || "Failed to load superadmin dashboard.");
+        showError(loadError, "Failed to load superadmin dashboard.");
       } finally {
         setIsLoading(false);
       }

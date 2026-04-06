@@ -7,6 +7,7 @@ import { adminDashboardAPI } from "../services/adminDashboardAPI";
 import { memberManagementAPI } from "../services/memberManagementAPI";
 import { tokenService } from "../services/tokenService";
 import { useTheme } from "../context/ThemeContext";
+import { showError, showSuccess } from "../utils/toastUtils";
 
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
@@ -49,6 +50,7 @@ const AdminDashboardPage = () => {
       setActivity(activityResponse.data?.activity || []);
     } catch (loadError) {
       setError(loadError.message || "Failed to load admin dashboard.");
+      showError(loadError, "Failed to load admin dashboard.");
     } finally {
       setIsLoading(false);
     }
@@ -71,15 +73,17 @@ const AdminDashboardPage = () => {
 
   const handleApproval = async (memberId, action) => {
     try {
+      let response;
       if (action === "approve") {
-        await memberManagementAPI.approveMember(memberId);
+        response = await memberManagementAPI.approveMember(memberId);
       } else {
-        await memberManagementAPI.rejectMember(memberId);
+        response = await memberManagementAPI.rejectMember(memberId);
       }
 
+      showSuccess(response.data?.message || "Member updated successfully");
       loadDashboard();
     } catch (actionError) {
-      setError(actionError.message || "Failed to update member approval.");
+      setError(showError(actionError, "Failed to update member approval."));
     }
   };
 

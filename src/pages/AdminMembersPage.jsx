@@ -5,6 +5,7 @@ import AdminBottomNav from "../components/AdminBottomNav";
 import EntityFormModal from "../components/EntityFormModal";
 import { memberManagementAPI } from "../services/memberManagementAPI";
 import { useTheme } from "../context/ThemeContext";
+import { showError, showSuccess } from "../utils/toastUtils";
 
 const initialForm = {
   fullName: "",
@@ -161,18 +162,20 @@ const AdminMembersPage = () => {
           formValues
         );
         const updatedMember = response.data?.member || null;
+        showSuccess(response.data?.message || "Member updated successfully");
 
         if (updatedMember && selectedMember?.id === editingMemberId) {
           setSelectedMember(updatedMember);
         }
       } else {
-        await memberManagementAPI.createMember(formValues);
+        const response = await memberManagementAPI.createMember(formValues);
+        showSuccess(response.data?.message || "Member created successfully");
       }
 
       closeModal();
       loadMembers();
     } catch (submitError) {
-      setFormError(submitError.message || "Failed to save member.");
+      setFormError(showError(submitError, "Failed to save member."));
     } finally {
       setIsSubmitting(false);
     }
@@ -181,15 +184,18 @@ const AdminMembersPage = () => {
   const handleDelete = async () => {
     if (!pendingDeleteMember) return;
     try {
-      await memberManagementAPI.deleteMember(pendingDeleteMember.id);
+      const response = await memberManagementAPI.deleteMember(
+        pendingDeleteMember.id
+      );
       if (selectedMember?.id === pendingDeleteMember.id) {
         setSelectedMember(null);
         setShowViewModal(false);
       }
       setPendingDeleteMember(null);
+      showSuccess(response.data?.message || "Member deleted successfully");
       loadMembers();
     } catch (deleteError) {
-      setError(deleteError.message || "Failed to delete member.");
+      setError(showError(deleteError, "Failed to delete member."));
     }
   };
 
@@ -200,6 +206,7 @@ const AdminMembersPage = () => {
         nextStatus
       );
       const updatedMember = response.data?.member || null;
+      showSuccess(response.data?.message || "Member status updated successfully");
 
       if (updatedMember && selectedMember?.id === memberId) {
         setSelectedMember(updatedMember);
@@ -207,7 +214,7 @@ const AdminMembersPage = () => {
 
       loadMembers();
     } catch (statusError) {
-      setError(statusError.message || "Failed to update member status.");
+      setError(showError(statusError, "Failed to update member status."));
     }
   };
 

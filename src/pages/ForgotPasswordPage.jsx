@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authAPI } from "../services/authAPI";
+import { showError, showSuccess } from "../utils/toastUtils";
 
 const ForgotPasswordPage = () => {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ const ForgotPasswordPage = () => {
 
   const validate = () => {
     if (!email.trim()) {
-      setError("test.");
+      setError("E-mail is required.");
       return false;
     }
     if (!/^[^\s@]+@gmail\.com$/i.test(email.trim())) {
@@ -31,9 +32,12 @@ const ForgotPasswordPage = () => {
     setIsLoading(true);
     try {
       const response = await authAPI.forgotPassword(email);
-      setSuccessMessage(response.message || "test");
+      const message =
+        response.data?.message || "Reset instructions sent successfully.";
+      setSuccessMessage(message);
+      showSuccess(message);
     } catch (err) {
-      setError(err.message || "Request failed. Please try again.");
+      setError(showError(err, "Request failed. Please try again."));
     } finally {
       setIsLoading(false);
     }

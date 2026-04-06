@@ -4,6 +4,7 @@ import SuperAdminBottomNav from "../components/SuperAdminBottomNav";
 import EntityFormModal from "../components/EntityFormModal";
 import { memberManagementAPI } from "../services/memberManagementAPI";
 import { useTheme } from "../context/ThemeContext";
+import { showError, showSuccess } from "../utils/toastUtils";
 
 const initialForm = {
   fullName: "",
@@ -95,15 +96,20 @@ const SuperAdminMembersPage = () => {
 
     try {
       if (editingMemberId) {
-        await memberManagementAPI.updateMember(editingMemberId, formValues);
+        const response = await memberManagementAPI.updateMember(
+          editingMemberId,
+          formValues
+        );
+        showSuccess(response.data?.message || "Member updated successfully");
       } else {
-        await memberManagementAPI.createMember(formValues);
+        const response = await memberManagementAPI.createMember(formValues);
+        showSuccess(response.data?.message || "Member created successfully");
       }
 
       closeModal();
       loadMembers(search);
     } catch (submitError) {
-      setFormError(submitError.message || "Failed to save member.");
+      setFormError(showError(submitError, "Failed to save member."));
     } finally {
       setIsSubmitting(false);
     }
@@ -114,10 +120,11 @@ const SuperAdminMembersPage = () => {
     if (!confirmed) return;
 
     try {
-      await memberManagementAPI.deleteMember(memberId);
+      const response = await memberManagementAPI.deleteMember(memberId);
+      showSuccess(response.data?.message || "Member deleted successfully");
       loadMembers(search);
     } catch (deleteError) {
-      setError(deleteError.message || "Failed to delete member.");
+      setError(showError(deleteError, "Failed to delete member."));
     }
   };
 

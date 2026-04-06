@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { authAPI } from "../services/authAPI";
+import { showError, showSuccess } from "../utils/toastUtils";
 
 const ResetPasswordPage = () => {
   const navigate = useNavigate();
@@ -75,16 +76,19 @@ const ResetPasswordPage = () => {
 
     setIsLoading(true);
     try {
-      await authAPI.resetPassword(
+      const response = await authAPI.resetPassword(
         email.trim(),
         token.trim(),
         newPassword,
         confirmNewPassword
       );
-      setSuccessMessage("Password reset successfully. You can now sign in.");
+      const message =
+        response.data?.message || "Password reset successfully. You can now sign in.";
+      setSuccessMessage(message);
+      showSuccess(message);
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      setError(err.message || "Failed to reset password. Please try again.");
+      setError(showError(err, "Failed to reset password. Please try again."));
     } finally {
       setIsLoading(false);
     }
