@@ -96,6 +96,10 @@ const AdminMembersPage = () => {
     setShowModal(true);
   };
 
+  const openDeleteModal = (member) => {
+    setPendingDeleteMember(member);
+  };
+
   const openViewModal = async (memberId) => {
     try {
       const response = await memberManagementAPI.getMemberById(memberId);
@@ -115,6 +119,18 @@ const AdminMembersPage = () => {
   const closeViewModal = () => {
     setShowViewModal(false);
     setSelectedMember(null);
+  };
+
+  const handleEditFromView = () => {
+    if (!selectedMember) return;
+    setShowViewModal(false);
+    openEditModal(selectedMember);
+  };
+
+  const handleDeleteFromView = () => {
+    if (!selectedMember) return;
+    setShowViewModal(false);
+    openDeleteModal(selectedMember);
   };
 
   const handleChange = (name, value) => {
@@ -140,7 +156,15 @@ const AdminMembersPage = () => {
 
     try {
       if (editingMemberId) {
-        await memberManagementAPI.updateMember(editingMemberId, formValues);
+        const response = await memberManagementAPI.updateMember(
+          editingMemberId,
+          formValues
+        );
+        const updatedMember = response.data?.member || null;
+
+        if (updatedMember && selectedMember?.id === editingMemberId) {
+          setSelectedMember(updatedMember);
+        }
       } else {
         await memberManagementAPI.createMember(formValues);
       }
@@ -158,6 +182,10 @@ const AdminMembersPage = () => {
     if (!pendingDeleteMember) return;
     try {
       await memberManagementAPI.deleteMember(pendingDeleteMember.id);
+      if (selectedMember?.id === pendingDeleteMember.id) {
+        setSelectedMember(null);
+        setShowViewModal(false);
+      }
       setPendingDeleteMember(null);
       loadMembers();
     } catch (deleteError) {
@@ -167,7 +195,16 @@ const AdminMembersPage = () => {
 
   const handleStatusChange = async (memberId, nextStatus) => {
     try {
-      await memberManagementAPI.changeMemberStatus(memberId, nextStatus);
+      const response = await memberManagementAPI.changeMemberStatus(
+        memberId,
+        nextStatus
+      );
+      const updatedMember = response.data?.member || null;
+
+      if (updatedMember && selectedMember?.id === memberId) {
+        setSelectedMember(updatedMember);
+      }
+
       loadMembers();
     } catch (statusError) {
       setError(statusError.message || "Failed to update member status.");
@@ -253,14 +290,18 @@ const AdminMembersPage = () => {
                   style={{ backgroundColor: panelBg }}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div>
+                    <button
+                      type="button"
+                      onClick={() => openViewModal(member.id)}
+                      className="flex-1 text-left"
+                    >
                       <p className="text-sm font-semibold" style={{ color: textMain }}>
                         {member.fullName}
                       </p>
                       <p className="mt-1 text-xs" style={{ color: textSub }}>
                         {member.email}
                       </p>
-                    </div>
+                    </button>
                     <div className="flex flex-col items-end gap-1.5">
                       <span className="rounded-full bg-[#D8EEE5] px-3 py-1 text-[11px] font-semibold text-[#215C42]">
                         {member.status}
@@ -296,7 +337,7 @@ const AdminMembersPage = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setPendingDeleteMember(member)}
+                      onClick={() => openDeleteModal(member)}
                       className="rounded-full bg-[#9F4B4B] px-3 py-1 text-xs font-semibold text-white"
                     >
                       Delete
@@ -355,9 +396,29 @@ const AdminMembersPage = () => {
                     {selectedMember.status}
                   </p>
                 </div>
+                <div>
+                  <p className="text-xs text-[#6E828D]">Role</p>
+                  <p className="mt-1 text-sm font-semibold capitalize">
+                    {selectedMember.role || "user"}
+                  </p>
+                </div>
               </div>
 
-              <div className="mt-5 flex justify-end">
+              <div className="mt-5 flex flex-wrap justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={handleEditFromView}
+                  className="rounded-full border border-[#265D6F] px-4 py-2 text-sm font-semibold text-[#265D6F]"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteFromView}
+                  className="rounded-full bg-[#9F4B4B] px-4 py-2 text-sm font-semibold text-white"
+                >
+                  Delete
+                </button>
                 <button
                   type="button"
                   onClick={closeViewModal}
