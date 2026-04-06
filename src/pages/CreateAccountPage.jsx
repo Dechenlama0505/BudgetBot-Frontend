@@ -91,11 +91,10 @@ const CreateAccount = () => {
         confirmPassword: confirmPassword,
       });
 
-      // Store the token
       tokenService.setToken(response.data.token);
+      tokenService.setUser(response.data.user);
 
-      // Navigate to home page
-      navigate("/home");
+      navigate(tokenService.getHomePath());
     } catch (error) {
       setApiError(error.message || "Failed to create account. Please try again.");
     } finally {

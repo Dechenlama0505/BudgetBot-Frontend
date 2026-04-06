@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import MobileAppFrame from "../components/MobileAppFrame";
 import AdminBottomNav from "../components/AdminBottomNav";
 import { authAPI } from "../services/authAPI";
+import { adminDashboardAPI } from "../services/adminDashboardAPI";
 import { memberManagementAPI } from "../services/memberManagementAPI";
 import { tokenService } from "../services/tokenService";
 import { useTheme } from "../context/ThemeContext";
@@ -12,6 +13,12 @@ const AdminDashboardPage = () => {
   const { darkMode } = useTheme();
   const [adminName, setAdminName] = useState("Admin");
   const [members, setMembers] = useState([]);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    activeUsers: 0,
+    pendingUsers: 0,
+    inactiveUsers: 0,
+  });
   const [activity, setActivity] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -21,15 +28,23 @@ const AdminDashboardPage = () => {
     setError("");
 
     try {
-      const [profileResponse, membersResponse, activityResponse] = await Promise.all([
-        authAPI.getProfile(),
-        memberManagementAPI.listMembers(),
-        memberManagementAPI.listRecentActivity(3),
-      ]);
+      const [profileResponse, statsResponse, membersResponse, activityResponse] =
+        await Promise.all([
+          authAPI.getProfile(),
+          adminDashboardAPI.getDashboardStats(),
+          memberManagementAPI.listMembers(),
+          memberManagementAPI.listRecentActivity(3),
+        ]);
 
       const currentUser = profileResponse.data?.user;
       tokenService.setUser(currentUser);
       setAdminName(currentUser?.fullName || "Admin");
+      setStats({
+        totalUsers: statsResponse.data?.totalUsers || 0,
+        activeUsers: statsResponse.data?.activeUsers || 0,
+        pendingUsers: statsResponse.data?.pendingUsers || 0,
+        inactiveUsers: statsResponse.data?.inactiveUsers || 0,
+      });
       setMembers(membersResponse.data?.members || []);
       setActivity(activityResponse.data?.activity || []);
     } catch (loadError) {
@@ -49,9 +64,6 @@ const AdminDashboardPage = () => {
   const textMain = darkMode ? "#E4EDF2" : "#265D6F";
   const textSub = darkMode ? "#C2D3DB" : "#6E828D";
 
-  const activeCount = members.filter((member) => member.status === "active").length;
-  const pendingCount = members.filter((member) => member.status === "pending").length;
-  const inactiveCount = members.filter((member) => member.status === "inactive").length;
   const pendingMembers = members
     .filter((member) => member.status === "pending")
     .slice(0, 3);
@@ -126,10 +138,10 @@ const AdminDashboardPage = () => {
 
         <section className="mt-4 grid grid-cols-2 gap-3">
           {[
-            { label: "Total Members", value: members.length },
-            { label: "Active Members", value: activeCount },
-            { label: "Pending Members", value: pendingCount },
-            { label: "Inactive Members", value: inactiveCount },
+            { label: "Total Members", value: stats.totalUsers },
+            { label: "Active Members", value: stats.activeUsers },
+            { label: "Pending Members", value: stats.pendingUsers },
+            { label: "Inactive Members", value: stats.inactiveUsers },
           ].map((item) => (
             <div
               key={item.label}

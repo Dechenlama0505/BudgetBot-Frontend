@@ -1,5 +1,15 @@
 export const API_BASE_URL = "http://localhost:5000";
 
+const parseJSON = async (response) => {
+  const payload = await response.json();
+
+  if (!response.ok) {
+    throw new Error(payload.message || "Request failed");
+  }
+
+  return { data: payload.data ?? payload };
+};
+
 export const authAPI = {
   signup: async (userData) => {
     const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
@@ -10,13 +20,7 @@ export const authAPI = {
       body: JSON.stringify(userData),
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Signup failed");
-    }
-
-    return data;
+    return parseJSON(response);
   },
 
   login: async (credentials) => {
@@ -28,13 +32,7 @@ export const authAPI = {
       body: JSON.stringify(credentials),
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Login failed");
-    }
-
-    return data;
+    return parseJSON(response);
   },
 
   getProfile: async () => {
@@ -48,13 +46,7 @@ export const authAPI = {
       },
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to fetch profile");
-    }
-
-    return data;
+    return parseJSON(response);
   },
 
   updateProfile: async (fullName, monthlyIncome, profilePicture) => {
@@ -85,13 +77,7 @@ export const authAPI = {
       body: formData,
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to update profile");
-    }
-
-    return data;
+    return parseJSON(response);
   },
 
   deleteProfilePicture: async () => {
@@ -105,13 +91,7 @@ export const authAPI = {
       },
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to delete profile picture");
-    }
-
-    return data;
+    return parseJSON(response);
   },
 
   changePassword: async (currentPassword, newPassword, confirmNewPassword) => {
@@ -130,13 +110,7 @@ export const authAPI = {
       }),
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to change password");
-    }
-
-    return data;
+    return parseJSON(response);
   },
 
   forgotPassword: async (email) => {
@@ -148,13 +122,7 @@ export const authAPI = {
       body: JSON.stringify({ email: email.trim() }),
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Request failed");
-    }
-
-    return data;
+    return parseJSON(response);
   },
 
   resetPassword: async (email, token, newPassword, confirmNewPassword) => {
@@ -171,12 +139,6 @@ export const authAPI = {
       }),
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to reset password");
-    }
-
-    return data;
+    return parseJSON(response);
   },
 };

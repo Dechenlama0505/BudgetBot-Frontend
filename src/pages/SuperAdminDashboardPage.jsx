@@ -2,31 +2,9 @@ import React, { useEffect, useState } from "react";
 import MobileAppFrame from "../components/MobileAppFrame";
 import SuperAdminBottomNav from "../components/SuperAdminBottomNav";
 import { authAPI } from "../services/authAPI";
-import { memberManagementAPI } from "../services/memberManagementAPI";
-import { adminManagementAPI } from "../services/adminManagementAPI";
+import { superAdminAPI } from "../services/superAdminAPI";
 import { tokenService } from "../services/tokenService";
 import { useTheme } from "../context/ThemeContext";
-
-const recentMembers = [
-  {
-    id: "recent_mem_001",
-    fullName: "Aarav Sharma",
-    email: "aarav@gmail.com",
-    status: "active",
-  },
-  {
-    id: "recent_mem_002",
-    fullName: "Nisha Thapa",
-    email: "nisha@gmail.com",
-    status: "pending",
-  },
-  {
-    id: "recent_mem_003",
-    fullName: "Maya Singh",
-    email: "maya@gmail.com",
-    status: "inactive",
-  },
-];
 
 const SuperAdminDashboardPage = () => {
   const { darkMode } = useTheme();
@@ -34,57 +12,30 @@ const SuperAdminDashboardPage = () => {
   const [membersCount, setMembersCount] = useState(0);
   const [adminsCount, setAdminsCount] = useState(0);
   const [activity, setActivity] = useState([]);
+  const [recentMembers, setRecentMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const formatMemberActivity = (entry) => {
-    const [name, status] = (entry.message || "")
-      .split("->")
-      .map((value) => value?.trim());
-
-    if (!name || !status) return entry.message;
-
-    if (status === "added") return `Member "${name}" was added`;
-    if (status === "updated") return `Member "${name}" was updated`;
-    if (status === "deleted") return `Member "${name}" was deleted`;
-
-    return `Member "${name}" was marked ${status}`;
-  };
 
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const [
-          profileResponse,
-          membersResponse,
-          adminsResponse,
-          memberActivityResponse,
-          adminActivityResponse,
-        ] = await Promise.all([
-          authAPI.getProfile(),
-          memberManagementAPI.listMembers(),
-          adminManagementAPI.listAdmins(),
-          memberManagementAPI.listRecentActivity(5),
-          adminManagementAPI.listRecentActivity(5),
-        ]);
+        const [profileResponse, statsResponse, recentMembersResponse, activityResponse] =
+          await Promise.all([
+            authAPI.getProfile(),
+            superAdminAPI.getDashboardStats(),
+            superAdminAPI.listRecentMembers(),
+            superAdminAPI.listRecentActivity(),
+          ]);
 
         const currentUser = profileResponse.data?.user;
+        const stats = statsResponse.data || {};
+
         tokenService.setUser(currentUser);
         setDisplayName(currentUser?.fullName || "Superadmin");
-        setMembersCount((membersResponse.data?.members || []).length);
-        setAdminsCount((adminsResponse.data?.admins || []).length);
-
-        const nextActivity = [
-          ...(memberActivityResponse.data?.activity || []).map((entry) => ({
-            ...entry,
-            message: formatMemberActivity(entry),
-          })),
-          ...(adminActivityResponse.data?.activity || []),
-        ]
-          .sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt))
-          .slice(0, 3);
-
-        setActivity(nextActivity);
+        setMembersCount(stats.totalUsers || 0);
+        setAdminsCount(stats.totalAdmins || 0);
+        setRecentMembers(recentMembersResponse.data || stats.recentUsers || []);
+        setActivity((activityResponse.data || stats.recentActivity || []).slice(0, 3));
       } catch (loadError) {
         setError(loadError.message || "Failed to load superadmin dashboard.");
       } finally {
@@ -199,29 +150,35 @@ const SuperAdminDashboardPage = () => {
             </h2>
           </div>
 
-          <div className="mt-3 space-y-3">
-            {recentMembers.map((member) => (
-              <div
-                key={member.id}
-                className="rounded-[18px] px-4 py-4"
-                style={{ backgroundColor: panelBg }}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold" style={{ color: textMain }}>
-                      {member.fullName}
-                    </p>
-                    <p className="mt-1 text-xs" style={{ color: textSub }}>
-                      {member.email}
-                    </p>
+          {recentMembers.length ? (
+            <div className="mt-3 space-y-3">
+              {recentMembers.map((member) => (
+                <div
+                  key={member.id}
+                  className="rounded-[18px] px-4 py-4"
+                  style={{ backgroundColor: panelBg }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: textMain }}>
+                        {member.fullName}
+                      </p>
+                      <p className="mt-1 text-xs" style={{ color: textSub }}>
+                        {member.email}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-[#D8EEE5] px-3 py-1 text-[11px] font-semibold text-[#215C42]">
+                      {member.status}
+                    </span>
                   </div>
-                  <span className="rounded-full bg-[#D8EEE5] px-3 py-1 text-[11px] font-semibold text-[#215C42]">
-                    {member.status}
-                  </span>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-[18px] border border-dashed border-[#C4CFD4] px-4 py-8 text-center text-sm text-[#6E828D]">
+              No recent members yet.
+            </div>
+          )}
         </section>
       </div>
     </MobileAppFrame>
