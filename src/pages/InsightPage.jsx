@@ -3,6 +3,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useExpenses } from "../context/ExpenseContext";
 import { insightsAPI, getCurrentMonth } from "../services/insightsAPI";
 import AppBottomNav from "../components/AppBottomNav";
+import ExpenseHistorySection from "../components/ExpenseHistorySection";
 
 const formatCurrency = (value) => {
   return Number(value || 0).toLocaleString("en-IN", {
@@ -42,6 +43,33 @@ const getPredictionStatusTone = (prediction) => {
     pillText: "#15803D",
   };
 };
+
+const mockExpenseHistory = [
+  {
+    id: "1",
+    category: "Food & Drinks",
+    amount: 450,
+    date: "2026-04-06",
+  },
+  {
+    id: "2",
+    category: "Transport",
+    amount: 200,
+    date: "2026-04-05",
+  },
+  {
+    id: "3",
+    category: "Entertainment",
+    amount: 850,
+    date: "2026-04-03",
+  },
+  {
+    id: "4",
+    category: "Shopping",
+    amount: 1200,
+    date: "2026-04-01",
+  },
+];
 
 const InsightPage = () => {
   const { darkMode } = useTheme();
@@ -125,6 +153,7 @@ const InsightPage = () => {
   const totalBudget = insights?.totalBudget ?? 0;
   const categoryBreakdown = insights?.categoryBreakdown ?? [];
   const budgetUsedPercent = insights?.budgetUsedPercent ?? 0;
+  const expenseHistory = mockExpenseHistory;
 
   const radius = 90;
   const circumference = 2 * Math.PI * radius;
@@ -605,6 +634,16 @@ const InsightPage = () => {
               </div>
             )}
           </div>
+
+          <ExpenseHistorySection
+            expenses={expenseHistory}
+            darkMode={darkMode}
+            textMain={textMain}
+            textSub={textSub}
+            panelBg={panelBg}
+            cardBg={darkMode ? "#1E3A45" : "#E8EDF0"}
+            categoryColors={categoryColors}
+          />
         </div>
 
         <div className="mt-auto w-full">
