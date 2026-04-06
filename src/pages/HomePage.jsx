@@ -9,6 +9,7 @@ import { expenseAPI } from "../services/expenseAPI";
 import { insightsAPI } from "../services/insightsAPI";
 import { tokenService } from "../services/tokenService";
 import { useTheme } from "../context/ThemeContext";
+import { useExpenses } from "../context/ExpenseContext";
 import { showError, showSuccess } from "../utils/toastUtils";
 
 const getCurrentMonth = () => {
@@ -45,6 +46,7 @@ const getTopPrediction = (predictions) => {
 const HomePage = () => {
   const navigate = useNavigate();
   const { darkMode } = useTheme();
+  const { expenseRefreshKey } = useExpenses();
 
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [userName, setUserName] = useState("");
@@ -127,7 +129,7 @@ const HomePage = () => {
       }
     };
     fetchMonthData();
-  }, [selectedMonth, budgetCategories]);
+  }, [selectedMonth, budgetCategories, expenseRefreshKey]);
 
   const loadPredictions = useCallback(async () => {
     if (!tokenService.isAuthenticated()) return;
@@ -152,7 +154,7 @@ const HomePage = () => {
 
   useEffect(() => {
     loadPredictions();
-  }, [loadPredictions]);
+  }, [loadPredictions, expenseRefreshKey]);
 
 
   // Show loading state while fetching profile

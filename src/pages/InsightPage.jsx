@@ -73,7 +73,7 @@ const mockExpenseHistory = [
 
 const InsightPage = () => {
   const { darkMode } = useTheme();
-  const { categoryColors } = useExpenses();
+  const { categoryColors, expenseRefreshKey } = useExpenses();
 
   const currentMonth = useMemo(getCurrentMonth, []);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
@@ -91,7 +91,7 @@ const InsightPage = () => {
       .getIncomeVsSpending()
       .then((res) => setIncomeVsSpending(res.data))
       .catch(() => setIncomeVsSpending(null));
-  }, []);
+  }, [expenseRefreshKey]);
 
   // Insights for selected month: refetch when month changes
   useEffect(() => {
@@ -101,7 +101,7 @@ const InsightPage = () => {
       .then((res) => setInsights(res.data))
       .catch(() => setInsights(null))
       .finally(() => setMonthLoading(false));
-  }, [selectedMonth]);
+  }, [selectedMonth, expenseRefreshKey]);
 
   useEffect(() => {
     setPredictionLoading(true);
@@ -121,7 +121,7 @@ const InsightPage = () => {
         setPredictionError(error.message || "Failed to load AI budget forecast");
       })
       .finally(() => setPredictionLoading(false));
-  }, [selectedMonth]);
+  }, [selectedMonth, expenseRefreshKey]);
 
   const goPreviousMonth = (e) => {
     e?.preventDefault();

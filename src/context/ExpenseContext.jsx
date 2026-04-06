@@ -41,6 +41,7 @@ export const ExpenseProvider = ({ children }) => {
   const [categoryTotals, setCategoryTotals] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [expenseRefreshKey, setExpenseRefreshKey] = useState(0);
 
   const [categoryColors, setCategoryColors] = useState(() => {
     const saved = localStorage.getItem("budgetbot_category_colors");
@@ -66,6 +67,7 @@ export const ExpenseProvider = ({ children }) => {
         setExpenses(res.data.expenses || []);
         setTotalExpenses(res.data.total ?? 0);
         setCategoryTotals(res.data.categoryTotals || {});
+        setExpenseRefreshKey((prev) => prev + 1);
       } else {
         setExpenses([]);
         setTotalExpenses(0);
@@ -112,6 +114,7 @@ export const ExpenseProvider = ({ children }) => {
           ...prev,
           [cat]: (prev[cat] || 0) + numAmount,
         }));
+        setExpenseRefreshKey((prev) => prev + 1);
       }
       return res;
     },
@@ -145,6 +148,7 @@ export const ExpenseProvider = ({ children }) => {
       categoryColors,
       updateCategoryColor,
       refreshExpenses,
+      expenseRefreshKey,
       loading,
       error,
     }),
@@ -155,6 +159,7 @@ export const ExpenseProvider = ({ children }) => {
       categoryBreakdown,
       categoryColors,
       refreshExpenses,
+      expenseRefreshKey,
       loading,
       error,
     ]
