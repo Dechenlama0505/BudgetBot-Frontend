@@ -1,202 +1,194 @@
-const STORAGE_KEY = "bb_admins_collection";
-const ACTIVITY_KEY = "bb_admins_activity";
+import { API_BASE_URL } from "./authAPI";
+import { tokenService } from "./tokenService";
 
-const defaultAdmins = [
-  {
-    id: "adm_001",
-    fullName: "Sofia Carter",
-    email: "sofia@gmail.com",
-    role: "admin",
-    status: "active",
-  },
-  {
-    id: "adm_002",
-    fullName: "Daniel Brooks",
-    email: "daniel@gmail.com",
-    role: "admin",
-    status: "active",
-  },
-];
+const getAuthHeaders = () => {
+  const token = tokenService.getToken();
 
-const defaultActivity = [
-  {
-    id: "adm_act_001",
-    type: "admin created",
-    message: `Admin "Dechen" was created`,
-    createdAt: "2026-03-27T09:20:00.000Z",
-  },
-  {
-    id: "adm_act_002",
-    type: "admin updated",
-    message: `Admin "Sofia" was updated`,
-    createdAt: "2026-03-26T16:10:00.000Z",
-  },
-];
-
-const wait = (ms = 200) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const readAdmins = () => {
-  const rawAdmins = localStorage.getItem(STORAGE_KEY);
-
-  if (!rawAdmins) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultAdmins));
-    return defaultAdmins;
-  }
-
-  try {
-    return JSON.parse(rawAdmins);
-  } catch {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultAdmins));
-    return defaultAdmins;
-  }
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 };
 
-const writeAdmins = (admins) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(admins));
-  return admins;
-};
+const mapAccount = (account) => ({
+  id: account.id || account._id,
+  fullName: account.fullName,
+  email: account.email,
+  role: account.role || "admin",
+  status: account.status || "active",
+  createdAt: account.createdAt,
+  updatedAt: account.updatedAt,
+});
 
-const readActivity = () => {
-  const rawActivity = localStorage.getItem(ACTIVITY_KEY);
-
-  if (!rawActivity) {
-    localStorage.setItem(ACTIVITY_KEY, JSON.stringify(defaultActivity));
-    return defaultActivity;
-  }
-
-  try {
-    return JSON.parse(rawActivity);
-  } catch {
-    localStorage.setItem(ACTIVITY_KEY, JSON.stringify(defaultActivity));
-    return defaultActivity;
-  }
-};
-
-const writeActivity = (activity) => {
-  localStorage.setItem(ACTIVITY_KEY, JSON.stringify(activity));
-  return activity;
-};
-
-const addActivity = (type, message) => {
-  const nextActivity = [
-    {
-      id: `adm_act_${Date.now()}`,
-      type,
-      message,
-      createdAt: new Date().toISOString(),
+const requestJSON = async (url, options = {}, fallbackMessage = "Request failed") => {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...getAuthHeaders(),
+      ...(options.headers || {}),
     },
-    ...readActivity(),
-  ].slice(0, 10);
+  });
 
-  writeActivity(nextActivity);
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.message || fallbackMessage);
+  }
+
+  return payload;
 };
 
-const getShortName = (fullName = "") => {
-  return fullName.trim().split(" ")[0] || fullName;
-};
-
-const filterAdmins = (admins, search = "") => {
+const filterAccounts = (accounts, search = "") => {
   const normalized = search.trim().toLowerCase();
 
-  if (!normalized) return admins;
+  if (!normalized) {
+    return accounts;
+  }
 
-  return admins.filter((admin) => {
+  return accounts.filter((account) => {
     return (
-      admin.fullName.toLowerCase().includes(normalized) ||
-      admin.email.toLowerCase().includes(normalized) ||
-      admin.status.toLowerCase().includes(normalized)
+      account.fullName?.toLowerCase().includes(normalized) ||
+      account.email?.toLowerCase().includes(normalized) ||
+      account.status?.toLowerCase().includes(normalized) ||
+      account.role?.toLowerCase().includes(normalized)
     );
   });
 };
 
 export const adminManagementAPI = {
   listAdmins: async (search = "") => {
-    await wait();
+    const [adminsPayload, superAdminsPayload] = await Promise.all([
+      requestJSON(`${API_BASE_URL}/api/superadmin/admins`, { method: "GET" }, "Failed to load admins"),
+      requestJSON(
+        `${API_BASE_URL}/api/superadmin/superadmins`,
+        { method: "GET" },
+        "Failed to load super admins"
+      ),
+    ]);
+
+    const accounts = [
+      ...(adminsPayload.data?.admins || []).map(mapAccount),
+      ...(superAdminsPayload.data?.superAdmins || []).map(mapAccount),
+    ].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
     return {
       data: {
-        admins: filterAdmins(readAdmins(), search),
+        admins: filterAccounts(accounts, search),
       },
     };
   },
 
-  createAdmin: async (adminData) => {
-    await wait();
-
-    const admins = readAdmins();
-    const newAdmin = {
-      id: `adm_${Date.now()}`,
-      fullName: adminData.fullName.trim(),
-      email: adminData.email.trim(),
-      role: "admin",
-      status: adminData.status || "active",
-    };
-
-    writeAdmins([newAdmin, ...admins]);
-    addActivity("admin created", `Admin "${getShortName(newAdmin.fullName)}" was created`);
+  listSuperAdmins: async () => {
+    const payload = await requestJSON(
+      `${API_BASE_URL}/api/superadmin/superadmins`,
+      { method: "GET" },
+      "Failed to load super admins"
+    );
 
     return {
       data: {
-        admin: newAdmin,
-        message: "Admin created successfully",
+        superAdmins: (payload.data?.superAdmins || []).map(mapAccount),
+        message: payload.message,
       },
     };
   },
 
-  updateAdmin: async (adminId, adminData) => {
-    await wait();
+  createAdmin: async (accountData) => {
+    const isSuperAdmin = accountData.role === "superadmin";
+    const endpoint = isSuperAdmin ? "superadmins" : "admins";
+    const payload = await requestJSON(
+      `${API_BASE_URL}/api/superadmin/${endpoint}`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          fullName: accountData.fullName,
+          email: accountData.email,
+          password: accountData.password,
+        }),
+      },
+      `Failed to create ${isSuperAdmin ? "super admin" : "admin"}`
+    );
 
-    let updatedAdmin = null;
+    const account = payload.data?.superAdmin || payload.data?.admin || null;
 
-    const admins = readAdmins().map((admin) => {
-      if (admin.id !== adminId) return admin;
+    return {
+      data: {
+        admin: account ? mapAccount(account) : null,
+        message: payload.message,
+      },
+    };
+  },
 
-      updatedAdmin = {
-        ...admin,
-        fullName: adminData.fullName.trim(),
-        email: adminData.email.trim(),
-        status: adminData.status || admin.status,
-      };
-
-      return updatedAdmin;
+  createSuperAdmin: async (accountData) => {
+    return adminManagementAPI.createAdmin({
+      ...accountData,
+      role: "superadmin",
     });
+  },
 
-    writeAdmins(admins);
+  updateAdmin: async (accountId, accountData) => {
+    const isSuperAdmin = accountData.role === "superadmin";
+    const endpoint = isSuperAdmin ? "superadmins" : "admins";
+    const payload = await requestJSON(
+      `${API_BASE_URL}/api/superadmin/${endpoint}/${accountId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          fullName: accountData.fullName,
+          status: accountData.status,
+        }),
+      },
+      `Failed to update ${isSuperAdmin ? "super admin" : "admin"}`
+    );
 
-    if (updatedAdmin) {
-      addActivity("admin updated", `Admin "${getShortName(updatedAdmin.fullName)}" was updated`);
-    }
+    const account = payload.data?.superAdmin || payload.data?.admin || null;
 
     return {
       data: {
-        admin: updatedAdmin,
-        message: "Admin updated successfully",
+        admin: account ? mapAccount(account) : null,
+        message: payload.message,
       },
     };
   },
 
-  deleteAdmin: async (adminId) => {
-    await wait();
-    const admin = readAdmins().find((entry) => entry.id === adminId);
-    writeAdmins(readAdmins().filter((entry) => entry.id !== adminId));
+  updateSuperAdmin: async (accountId, accountData) => {
+    return adminManagementAPI.updateAdmin(accountId, {
+      ...accountData,
+      role: "superadmin",
+    });
+  },
 
-    if (admin) {
-      addActivity("admin deleted", `Admin "${getShortName(admin.fullName)}" was deleted`);
-    }
+  deleteAdmin: async (accountId, role = "admin") => {
+    const endpoint = role === "superadmin" ? "superadmins" : "admins";
+    const payload = await requestJSON(
+      `${API_BASE_URL}/api/superadmin/${endpoint}/${accountId}`,
+      { method: "DELETE" },
+      `Failed to delete ${role === "superadmin" ? "super admin" : "admin"}`
+    );
 
     return {
       data: {
-        success: true,
-        message: "Admin deleted successfully",
+        success: payload.success,
+        message: payload.message,
       },
     };
+  },
+
+  deleteSuperAdmin: async (accountId) => {
+    return adminManagementAPI.deleteAdmin(accountId, "superadmin");
   },
 
   listRecentActivity: async (limit = 3) => {
-    await wait();
+    const payload = await requestJSON(
+      `${API_BASE_URL}/api/superadmin/activity?limit=${encodeURIComponent(limit)}`,
+      { method: "GET" },
+      "Failed to load recent activity"
+    );
 
     return {
       data: {
-        activity: readActivity().slice(0, limit),
+        activity: Array.isArray(payload.data) ? payload.data.slice(0, limit) : [],
+        message: payload.message,
       },
     };
   },

@@ -9,13 +9,26 @@ import { showError, showSuccess } from "../utils/toastUtils";
 const initialForm = {
   fullName: "",
   email: "",
+  password: "",
   status: "active",
 };
 
-const fields = [
-  { name: "fullName", label: "Full Name", placeholder: "Enter full name" },
-  { name: "email", label: "E-mail", type: "email", placeholder: "Enter e-mail" },
-  {
+const getFields = (isEditing) => {
+  const fields = [
+    { name: "fullName", label: "Full Name", placeholder: "Enter full name" },
+    { name: "email", label: "E-mail", type: "email", placeholder: "Enter e-mail" },
+  ];
+
+  if (!isEditing) {
+    fields.push({
+      name: "password",
+      label: "Password",
+      type: "password",
+      placeholder: "Enter password",
+    });
+  }
+
+  fields.push({
     name: "status",
     label: "Status",
     type: "select",
@@ -24,8 +37,10 @@ const fields = [
       { value: "pending", label: "Pending" },
       { value: "inactive", label: "Inactive" },
     ],
-  },
-];
+  });
+
+  return fields;
+};
 
 const SuperAdminMembersPage = () => {
   const { darkMode } = useTheme();
@@ -69,6 +84,7 @@ const SuperAdminMembersPage = () => {
     setFormValues({
       fullName: member.fullName,
       email: member.email,
+      password: "",
       status: member.status,
     });
     setFormError("");
@@ -88,6 +104,11 @@ const SuperAdminMembersPage = () => {
   const handleSubmit = async () => {
     if (!formValues.fullName.trim() || !formValues.email.trim()) {
       setFormError("Full name and e-mail are required.");
+      return;
+    }
+
+    if (!editingMemberId && !formValues.password.trim()) {
+      setFormError("Password is required.");
       return;
     }
 
@@ -234,7 +255,7 @@ const SuperAdminMembersPage = () => {
         {showModal ? (
           <EntityFormModal
             title={editingMemberId ? "Update Member" : "Add Member"}
-            fields={fields}
+            fields={getFields(Boolean(editingMemberId))}
             values={formValues}
             error={formError}
             isSubmitting={isSubmitting}

@@ -9,66 +9,93 @@ import { showError, showSuccess } from "../utils/toastUtils";
 const initialForm = {
   fullName: "",
   email: "",
+  password: "",
+  role: "admin",
   status: "active",
 };
 
-const fields = [
-  { name: "fullName", label: "Full Name", placeholder: "Enter full name" },
-  { name: "email", label: "E-mail", type: "email", placeholder: "Enter e-mail" },
-  {
-    name: "status",
-    label: "Status",
-    type: "select",
-    options: [
-      { value: "active", label: "Active" },
-      { value: "inactive", label: "Inactive" },
-    ],
-  },
-];
+const getFields = (isEditing) => {
+  const fields = [
+    { name: "fullName", label: "Full Name", placeholder: "Enter full name" },
+    { name: "email", label: "E-mail", type: "email", placeholder: "Enter e-mail" },
+  ];
+
+  if (isEditing) {
+    fields.push({
+      name: "status",
+      label: "Status",
+      type: "select",
+      options: [
+        { value: "active", label: "Active" },
+        { value: "inactive", label: "Inactive" },
+      ],
+    });
+  } else {
+    fields.push({
+      name: "password",
+      label: "Password",
+      type: "password",
+      placeholder: "Enter password",
+    });
+    fields.push({
+      name: "role",
+      label: "Role",
+      type: "select",
+      options: [
+        { value: "admin", label: "Admin" },
+        { value: "superadmin", label: "Super Admin" },
+      ],
+    });
+  }
+
+  return fields;
+};
 
 const SuperAdminAdminsPage = () => {
   const { darkMode } = useTheme();
-  const [admins, setAdmins] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [editingAdminId, setEditingAdminId] = useState(null);
+  const [editingAccount, setEditingAccount] = useState(null);
   const [formValues, setFormValues] = useState(initialForm);
 
-  const loadAdmins = async (searchValue = "") => {
+  const loadAccounts = async (searchValue = "") => {
     setIsLoading(true);
     setError("");
 
     try {
       const response = await adminManagementAPI.listAdmins(searchValue);
-      setAdmins(response.data?.admins || []);
+      setAccounts(response.data?.admins || []);
     } catch (loadError) {
-      setError(loadError.message || "Failed to load admins.");
+      setError(loadError.message || "Failed to load accounts.");
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadAdmins(search);
+    loadAccounts(search);
   }, [search]);
 
   const openCreateModal = () => {
-    setEditingAdminId(null);
+    setEditingAccount(null);
     setFormValues(initialForm);
     setFormError("");
     setShowModal(true);
   };
 
-  const openEditModal = (admin) => {
-    setEditingAdminId(admin.id);
+  const openEditModal = (account) => {
+    setEditingAccount(account);
     setFormValues({
-      fullName: admin.fullName,
-      email: admin.email,
-      status: admin.status,
+      fullName: account.fullName,
+      email: account.email,
+      password: "",
+      role: account.role,
+      status: account.status,
     });
     setFormError("");
     setShowModal(true);
@@ -90,40 +117,58 @@ const SuperAdminAdminsPage = () => {
       return;
     }
 
+    if (!editingAccount && !formValues.password.trim()) {
+      setFormError("Password is required.");
+      return;
+    }
+
     setIsSubmitting(true);
     setFormError("");
 
     try {
-      if (editingAdminId) {
+      if (editingAccount) {
         const response = await adminManagementAPI.updateAdmin(
-          editingAdminId,
-          formValues
+          editingAccount.id,
+          {
+            ...formValues,
+            role: editingAccount.role,
+          }
         );
-        showSuccess(response.data?.message || "Admin updated successfully");
+        showSuccess(
+          response.data?.message ||
+            `${editingAccount.role === "superadmin" ? "Super admin" : "Admin"} updated successfully`
+        );
       } else {
         const response = await adminManagementAPI.createAdmin(formValues);
-        showSuccess(response.data?.message || "Admin created successfully");
+        showSuccess(
+          response.data?.message ||
+            `${formValues.role === "superadmin" ? "Super admin" : "Admin"} created successfully`
+        );
       }
 
       closeModal();
-      loadAdmins(search);
+      loadAccounts(search);
     } catch (submitError) {
-      setFormError(showError(submitError, "Failed to save admin."));
+      setFormError(showError(submitError, "Failed to save account."));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDelete = async (adminId) => {
-    const confirmed = window.confirm("Delete this admin?");
+  const handleDelete = async (account) => {
+    const label = account.role === "superadmin" ? "super admin" : "admin";
+    const confirmed = window.confirm(`Delete this ${label}?`);
     if (!confirmed) return;
 
     try {
-      const response = await adminManagementAPI.deleteAdmin(adminId);
-      showSuccess(response.data?.message || "Admin deleted successfully");
-      loadAdmins(search);
+      const response = await adminManagementAPI.deleteAdmin(account.id, account.role);
+      showSuccess(
+        response.data?.message ||
+          `${account.role === "superadmin" ? "Super admin" : "Admin"} deleted successfully`
+      );
+      loadAccounts(search);
     } catch (deleteError) {
-      setError(showError(deleteError, "Failed to delete admin."));
+      setError(showError(deleteError, "Failed to delete account."));
     }
   };
 
@@ -143,13 +188,13 @@ const SuperAdminAdminsPage = () => {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.2em]" style={{ color: textSub }}>
-                Superadmin Admins
+                Superadmin Accounts
               </p>
               <h1 className="mt-2 text-2xl font-semibold" style={{ color: textMain }}>
-                Manage Admins
+                Manage Admin Accounts
               </h1>
               <p className="mt-2 text-sm" style={{ color: textSub }}>
-                Create, update, and delete admin accounts without changing the app style.
+                Create, update, and delete admin and super admin accounts without changing the app style.
               </p>
             </div>
             <button
@@ -157,7 +202,7 @@ const SuperAdminAdminsPage = () => {
               onClick={openCreateModal}
               className="rounded-full bg-[#265D6F] px-4 py-2 text-xs font-semibold text-white"
             >
-              Add Admin
+              Add Account
             </button>
           </div>
         </section>
@@ -168,7 +213,7 @@ const SuperAdminAdminsPage = () => {
               type="text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search admins by name, email, or status"
+              placeholder="Search accounts by name, email, role, or status"
               className="w-full bg-transparent text-sm outline-none"
               style={{ color: textMain }}
             />
@@ -180,25 +225,28 @@ const SuperAdminAdminsPage = () => {
             <div className="mt-5 flex justify-center py-10">
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#265D6F] border-t-transparent" />
             </div>
-          ) : admins.length ? (
+          ) : accounts.length ? (
             <div className="mt-4 space-y-3">
-              {admins.map((admin) => (
+              {accounts.map((account) => (
                 <div
-                  key={admin.id}
+                  key={account.id}
                   className="rounded-[20px] px-4 py-3"
                   style={{ backgroundColor: panelBg }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold" style={{ color: textMain }}>
-                        {admin.fullName}
+                        {account.fullName}
                       </p>
                       <p className="mt-1 text-xs" style={{ color: textSub }}>
-                        {admin.email}
+                        {account.email}
+                      </p>
+                      <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: textSub }}>
+                        {account.role}
                       </p>
                     </div>
                     <span className="rounded-full bg-[#D8EEE5] px-3 py-1 text-[11px] font-semibold text-[#215C42]">
-                      {admin.status}
+                      {account.status}
                     </span>
                   </div>
 
@@ -206,14 +254,14 @@ const SuperAdminAdminsPage = () => {
                     <div className="flex gap-2">
                       <button
                         type="button"
-                        onClick={() => openEditModal(admin)}
+                        onClick={() => openEditModal(account)}
                         className="rounded-full border border-[#265D6F] px-3 py-1 text-xs font-semibold text-[#265D6F]"
                       >
                         Edit
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleDelete(admin.id)}
+                        onClick={() => handleDelete(account)}
                         className="rounded-full bg-[#9F4B4B] px-3 py-1 text-xs font-semibold text-white"
                       >
                         Delete
@@ -225,19 +273,19 @@ const SuperAdminAdminsPage = () => {
             </div>
           ) : (
             <div className="mt-4 rounded-[18px] border border-dashed border-[#C4CFD4] px-4 py-8 text-center text-sm text-[#6E828D]">
-              No admins found.
+              No accounts found.
             </div>
           )}
         </section>
 
         {showModal ? (
           <EntityFormModal
-            title={editingAdminId ? "Update Admin" : "Add Admin"}
-            fields={fields}
+            title={editingAccount ? "Update Account" : "Add Account"}
+            fields={getFields(Boolean(editingAccount))}
             values={formValues}
             error={formError}
             isSubmitting={isSubmitting}
-            submitLabel={editingAdminId ? "Update" : "Create"}
+            submitLabel={editingAccount ? "Update" : "Create"}
             onChange={handleChange}
             onClose={closeModal}
             onSubmit={handleSubmit}

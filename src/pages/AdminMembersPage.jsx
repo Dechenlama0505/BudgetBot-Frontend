@@ -10,13 +10,26 @@ import { showError, showSuccess } from "../utils/toastUtils";
 const initialForm = {
   fullName: "",
   email: "",
+  password: "",
   status: "active",
 };
 
-const fields = [
-  { name: "fullName", label: "Full Name", placeholder: "Enter full name" },
-  { name: "email", label: "E-mail", type: "email", placeholder: "Enter e-mail" },
-  {
+const getFields = (isEditing) => {
+  const baseFields = [
+    { name: "fullName", label: "Full Name", placeholder: "Enter full name" },
+    { name: "email", label: "E-mail", type: "email", placeholder: "Enter e-mail" },
+  ];
+
+  if (!isEditing) {
+    baseFields.push({
+      name: "password",
+      label: "Password",
+      type: "password",
+      placeholder: "Enter password",
+    });
+  }
+
+  baseFields.push({
     name: "status",
     label: "Status",
     type: "select",
@@ -25,8 +38,10 @@ const fields = [
       { value: "pending", label: "Pending" },
       { value: "inactive", label: "Inactive" },
     ],
-  },
-];
+  });
+
+  return baseFields;
+};
 
 const AdminMembersPage = () => {
   const location = useLocation();
@@ -91,6 +106,7 @@ const AdminMembersPage = () => {
     setFormValues({
       fullName: member.fullName,
       email: member.email,
+      password: "",
       status: member.status,
     });
     setFormError("");
@@ -141,6 +157,9 @@ const AdminMembersPage = () => {
   const validateForm = () => {
     if (!formValues.fullName.trim()) return "Full name is required.";
     if (!formValues.email.trim()) return "E-mail is required.";
+    if (!editingMemberId && !formValues.password.trim()) {
+      return "Password is required.";
+    }
     return "";
   };
 
@@ -363,7 +382,7 @@ const AdminMembersPage = () => {
         {showModal ? (
           <EntityFormModal
             title={editingMemberId ? "Update Member" : "Add Member"}
-            fields={fields}
+            fields={getFields(Boolean(editingMemberId))}
             values={formValues}
             error={formError}
             isSubmitting={isSubmitting}

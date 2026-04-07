@@ -1,111 +1,13 @@
-const STORAGE_KEY = "bb_members_collection";
-const ACTIVITY_KEY = "bb_members_activity";
+import { API_BASE_URL } from "./authAPI";
+import { tokenService } from "./tokenService";
 
-const defaultMembers = [
-  {
-    id: "mem_001",
-    fullName: "Aarav Sharma",
-    email: "aarav@gmail.com",
-    role: "user",
-    status: "active",
-  },
-  {
-    id: "mem_002",
-    fullName: "Nisha Thapa",
-    email: "nisha@gmail.com",
-    role: "user",
-    status: "pending",
-  },
-  {
-    id: "mem_003",
-    fullName: "Maya Singh",
-    email: "maya@gmail.com",
-    role: "user",
-    status: "inactive",
-  },
-];
+const getAuthHeaders = () => {
+  const token = tokenService.getToken();
 
-const defaultActivity = [
-  {
-    id: "act_001",
-    type: "member approved",
-    message: "Nisha -> active",
-    createdAt: "2026-03-27T08:15:00.000Z",
-  },
-  {
-    id: "act_002",
-    type: "member updated",
-    message: "Maya -> updated",
-    createdAt: "2026-03-26T14:30:00.000Z",
-  },
-  {
-    id: "act_003",
-    type: "member added",
-    message: "Aarav -> added",
-    createdAt: "2026-03-26T09:05:00.000Z",
-  },
-];
-
-const wait = (ms = 200) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const readMembers = () => {
-  const rawMembers = localStorage.getItem(STORAGE_KEY);
-
-  if (!rawMembers) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultMembers));
-    return defaultMembers;
-  }
-
-  try {
-    return JSON.parse(rawMembers);
-  } catch {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultMembers));
-    return defaultMembers;
-  }
-};
-
-const writeMembers = (members) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(members));
-  return members;
-};
-
-const readActivity = () => {
-  const rawActivity = localStorage.getItem(ACTIVITY_KEY);
-
-  if (!rawActivity) {
-    localStorage.setItem(ACTIVITY_KEY, JSON.stringify(defaultActivity));
-    return defaultActivity;
-  }
-
-  try {
-    return JSON.parse(rawActivity);
-  } catch {
-    localStorage.setItem(ACTIVITY_KEY, JSON.stringify(defaultActivity));
-    return defaultActivity;
-  }
-};
-
-const writeActivity = (activity) => {
-  localStorage.setItem(ACTIVITY_KEY, JSON.stringify(activity));
-  return activity;
-};
-
-const addActivity = (type, message) => {
-  const nextActivity = [
-    {
-      id: `act_${Date.now()}`,
-      type,
-      message,
-      createdAt: new Date().toISOString(),
-    },
-    ...readActivity(),
-  ].slice(0, 10);
-
-  writeActivity(nextActivity);
-};
-
-const getShortName = (fullName = "") => {
-  return fullName.trim().split(" ")[0] || fullName;
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 };
 
 const normalizeListArgs = (searchOrOptions) => {
@@ -128,9 +30,9 @@ const filterMembers = (members, search = "", status = "all") => {
   return members.filter((member) => {
     const matchesSearch =
       !normalizedSearch ||
-      member.fullName.toLowerCase().includes(normalizedSearch) ||
-      member.email.toLowerCase().includes(normalizedSearch) ||
-      member.status.toLowerCase().includes(normalizedSearch);
+      member.fullName?.toLowerCase().includes(normalizedSearch) ||
+      member.email?.toLowerCase().includes(normalizedSearch) ||
+      member.status?.toLowerCase().includes(normalizedSearch);
 
     const matchesStatus = status === "all" || member.status === status;
 
@@ -138,196 +40,269 @@ const filterMembers = (members, search = "", status = "all") => {
   });
 };
 
+const mapMember = (member) => ({
+  id: member.id || member._id,
+  fullName: member.fullName,
+  email: member.email,
+  role: member.role || "user",
+  status: member.status || "active",
+  monthlyIncome: member.monthlyIncome ?? null,
+  profilePicture: member.profilePicture ?? null,
+  createdAt: member.createdAt,
+  updatedAt: member.updatedAt,
+});
+
+const requestJSON = async (url, options = {}, fallbackMessage = "Request failed") => {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...getAuthHeaders(),
+      ...(options.headers || {}),
+    },
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.message || fallbackMessage);
+  }
+
+  return payload;
+};
+
+const getRoleBasePath = () => {
+  const role = tokenService.getRole();
+
+  return role === "superadmin"
+    ? `${API_BASE_URL}/api/superadmin`
+    : `${API_BASE_URL}/api/admin`;
+};
+
 export const memberManagementAPI = {
   listMembers: async (searchOrOptions = "") => {
-    await wait();
-
     const { search, status } = normalizeListArgs(searchOrOptions);
+    const role = tokenService.getRole();
+
+    if (role === "superadmin") {
+      const payload = await requestJSON(
+        `${API_BASE_URL}/api/superadmin/members`,
+        { method: "GET" },
+        "Failed to load members"
+      );
+      const members = filterMembers(
+        (payload.data?.members || []).map(mapMember),
+        search,
+        status
+      );
+
+      return {
+        data: {
+          members,
+          message: payload.message,
+        },
+      };
+    }
+
+    const params = new URLSearchParams();
+
+    if (search.trim()) {
+      params.set("search", search.trim());
+    }
+
+    if (status && status !== "all") {
+      params.set("status", status);
+    }
+
+    const query = params.toString();
+    const payload = await requestJSON(
+      `${getRoleBasePath()}/members${query ? `?${query}` : ""}`,
+      { method: "GET" },
+      "Failed to load members"
+    );
 
     return {
       data: {
-        members: filterMembers(readMembers(), search, status),
+        members: (payload.data?.members || []).map(mapMember),
+        message: payload.message,
       },
     };
   },
 
   getMemberById: async (memberId) => {
-    await wait();
+    const role = tokenService.getRole();
+
+    if (role === "superadmin") {
+      const response = await memberManagementAPI.listMembers();
+      const member =
+        response.data?.members?.find((entry) => entry.id === memberId) || null;
+
+      return {
+        data: {
+          member,
+        },
+      };
+    }
+
+    const payload = await requestJSON(
+      `${getRoleBasePath()}/members/${memberId}`,
+      { method: "GET" },
+      "Failed to load member details"
+    );
 
     return {
       data: {
-        member: readMembers().find((member) => member.id === memberId) || null,
+        member: payload.data?.member ? mapMember(payload.data.member) : null,
+        message: payload.message,
       },
     };
   },
 
   createMember: async (memberData) => {
-    await wait();
-
-    const members = readMembers();
-    const newMember = {
-      id: `mem_${Date.now()}`,
-      fullName: memberData.fullName.trim(),
-      email: memberData.email.trim(),
-      role: "user",
-      status: memberData.status || "active",
-    };
-
-    writeMembers([newMember, ...members]);
-    addActivity("member added", `${getShortName(newMember.fullName)} -> added`);
+    const payload = await requestJSON(
+      `${getRoleBasePath()}/members`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          fullName: memberData.fullName,
+          email: memberData.email,
+          password: memberData.password,
+          status: memberData.status,
+        }),
+      },
+      "Failed to create member"
+    );
 
     return {
       data: {
-        member: newMember,
-        message: "Member created successfully",
+        member: payload.data?.member ? mapMember(payload.data.member) : null,
+        message: payload.message,
       },
     };
   },
 
   updateMember: async (memberId, memberData) => {
-    await wait();
-
-    let updatedMember = null;
-
-    const members = readMembers().map((member) => {
-      if (member.id !== memberId) return member;
-
-      updatedMember = {
-        ...member,
-        fullName: memberData.fullName.trim(),
-        email: memberData.email.trim(),
-        status: memberData.status || member.status,
-      };
-
-      return updatedMember;
-    });
-
-    writeMembers(members);
-    if (updatedMember) {
-      addActivity("member updated", `${getShortName(updatedMember.fullName)} -> updated`);
-    }
+    const payload = await requestJSON(
+      `${getRoleBasePath()}/members/${memberId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          fullName: memberData.fullName,
+          email: memberData.email,
+          status: memberData.status,
+        }),
+      },
+      "Failed to update member"
+    );
 
     return {
       data: {
-        member: updatedMember,
-        message: "Member updated successfully",
+        member: payload.data?.member ? mapMember(payload.data.member) : null,
+        message: payload.message,
       },
     };
   },
 
   changeMemberStatus: async (memberId, nextStatus) => {
-    await wait();
-
-    let updatedMember = null;
-
-    const members = readMembers().map((member) => {
-      if (member.id !== memberId) return member;
-
-      updatedMember = {
-        ...member,
-        status: nextStatus,
-      };
-
-      return updatedMember;
-    });
-
-    writeMembers(members);
-
-    if (updatedMember) {
-      addActivity(`member marked ${nextStatus}`, `${getShortName(updatedMember.fullName)} -> ${nextStatus}`);
-    }
+    const payload = await requestJSON(
+      `${getRoleBasePath()}/members/${memberId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          status: nextStatus,
+        }),
+      },
+      "Failed to update member status"
+    );
 
     return {
       data: {
-        member: updatedMember,
-        message: "Member status updated successfully",
+        member: payload.data?.member ? mapMember(payload.data.member) : null,
+        message: payload.message || "Member status updated successfully",
       },
     };
   },
 
   approveMember: async (memberId) => {
-    await wait();
-
-    let approvedMember = null;
-
-    const members = readMembers().map((member) => {
-      if (member.id !== memberId) return member;
-
-      approvedMember = {
-        ...member,
-        status: "active",
-      };
-
-      return approvedMember;
-    });
-
-    writeMembers(members);
-
-    if (approvedMember) {
-      addActivity("member approved", `${getShortName(approvedMember.fullName)} -> active`);
+    if (tokenService.getRole() === "superadmin") {
+      return memberManagementAPI.changeMemberStatus(memberId, "active");
     }
+
+    const payload = await requestJSON(
+      `${API_BASE_URL}/api/admin/members/${memberId}/approve`,
+      { method: "PATCH" },
+      "Failed to approve member"
+    );
 
     return {
       data: {
-        member: approvedMember,
-        message: "Member approved successfully",
+        member: payload.data?.member ? mapMember(payload.data.member) : null,
+        message: payload.message,
       },
     };
   },
 
   rejectMember: async (memberId) => {
-    await wait();
-
-    let rejectedMember = null;
-
-    const members = readMembers().map((member) => {
-      if (member.id !== memberId) return member;
-
-      rejectedMember = {
-        ...member,
-        status: "inactive",
-      };
-
-      return rejectedMember;
-    });
-
-    writeMembers(members);
-
-    if (rejectedMember) {
-      addActivity("member rejected", `${getShortName(rejectedMember.fullName)} -> inactive`);
+    if (tokenService.getRole() === "superadmin") {
+      return memberManagementAPI.changeMemberStatus(memberId, "inactive");
     }
+
+    const payload = await requestJSON(
+      `${API_BASE_URL}/api/admin/members/${memberId}/reject`,
+      { method: "PATCH" },
+      "Failed to reject member"
+    );
 
     return {
       data: {
-        member: rejectedMember,
-        message: "Member rejected successfully",
+        member: payload.data?.member ? mapMember(payload.data.member) : null,
+        message: payload.message,
       },
     };
   },
 
   deleteMember: async (memberId) => {
-    await wait();
-    const member = readMembers().find((entry) => entry.id === memberId);
-    writeMembers(readMembers().filter((entry) => entry.id !== memberId));
-
-    if (member) {
-      addActivity("member deleted", `${getShortName(member.fullName)} -> deleted`);
-    }
+    const payload = await requestJSON(
+      `${getRoleBasePath()}/members/${memberId}`,
+      { method: "DELETE" },
+      "Failed to delete member"
+    );
 
     return {
       data: {
-        success: true,
-        message: "Member deleted successfully",
+        success: payload.success,
+        message: payload.message,
       },
     };
   },
 
-  listRecentActivity: async (limit = 4) => {
-    await wait();
+  listRecentActivity: async (limit = 3) => {
+    const role = tokenService.getRole();
+
+    if (role === "superadmin") {
+      const payload = await requestJSON(
+        `${API_BASE_URL}/api/superadmin/activity`,
+        { method: "GET" },
+        "Failed to load recent activity"
+      );
+
+      return {
+        data: {
+          activity: Array.isArray(payload.data) ? payload.data : [],
+          message: payload.message,
+        },
+      };
+    }
+
+    const payload = await requestJSON(
+      `${API_BASE_URL}/api/admin/activity/recent?limit=${encodeURIComponent(limit)}`,
+      { method: "GET" },
+      "Failed to load recent activity"
+    );
 
     return {
       data: {
-        activity: readActivity().slice(0, limit),
+        activity: payload.data?.activity || [],
+        message: payload.message,
       },
     };
   },
