@@ -44,11 +44,21 @@ const getFields = (isEditing) => {
 };
 
 const AdminMembersPage = () => {
+  const PAGE_SIZE = 10;
   const location = useLocation();
   const { darkMode } = useTheme();
   const [members, setMembers] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: PAGE_SIZE,
+    totalItems: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,7 +70,11 @@ const AdminMembersPage = () => {
   const [pendingDeleteMember, setPendingDeleteMember] = useState(null);
   const [formValues, setFormValues] = useState(initialForm);
 
-  const loadMembers = useCallback(async (searchValue = search, nextStatus = statusFilter) => {
+  const loadMembers = useCallback(async (
+    searchValue = search,
+    nextStatus = statusFilter,
+    nextPage = currentPage
+  ) => {
     setIsLoading(true);
     setError("");
 
@@ -68,10 +82,19 @@ const AdminMembersPage = () => {
       const response = await memberManagementAPI.listMembers({
         search: searchValue,
         status: nextStatus,
+        page: nextPage,
+        limit: PAGE_SIZE,
       });
       const nextMembers = response.data?.members || [];
+      const nextPagination = response.data?.pagination || pagination;
 
       setMembers(nextMembers);
+      setPagination(nextPagination);
+
+      if (nextPage > nextPagination.totalPages) {
+        setCurrentPage(nextPagination.totalPages);
+        return;
+      }
 
       if (location.state?.openView && location.state?.selectedMemberId) {
         const preselectedMember = nextMembers.find(
@@ -88,11 +111,15 @@ const AdminMembersPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [location.state, search, statusFilter]);
+  }, [currentPage, location.state, pagination, search, statusFilter]);
 
   useEffect(() => {
-    loadMembers(search, statusFilter);
-  }, [loadMembers, search, statusFilter]);
+    loadMembers(search, statusFilter, currentPage);
+  }, [currentPage, loadMembers, search, statusFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
 
   const openCreateModal = () => {
     setEditingMemberId(null);
@@ -192,7 +219,7 @@ const AdminMembersPage = () => {
       }
 
       closeModal();
-      loadMembers();
+      loadMembers(search, statusFilter, currentPage);
     } catch (submitError) {
       setFormError(showError(submitError, "Failed to save member."));
     } finally {
@@ -212,7 +239,7 @@ const AdminMembersPage = () => {
       }
       setPendingDeleteMember(null);
       showSuccess(response.data?.message || "Member deleted successfully");
-      loadMembers();
+      loadMembers(search, statusFilter, currentPage);
     } catch (deleteError) {
       setError(showError(deleteError, "Failed to delete member."));
     }
@@ -231,7 +258,7 @@ const AdminMembersPage = () => {
         setSelectedMember(updatedMember);
       }
 
-      loadMembers();
+      loadMembers(search, statusFilter, currentPage);
     } catch (statusError) {
       setError(showError(statusError, "Failed to update member status."));
     }
@@ -377,6 +404,34 @@ const AdminMembersPage = () => {
               No members found.
             </div>
           )}
+
+          {!isLoading && pagination.totalItems > 0 ? (
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={!pagination.hasPrevPage}
+                className="rounded-full border border-[#265D6F] px-4 py-2 text-xs font-semibold text-[#265D6F] disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <p className="text-xs font-semibold" style={{ color: textSub }}>
+                Page {pagination.page} of {pagination.totalPages}
+              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((prev) =>
+                    pagination.hasNextPage ? prev + 1 : prev
+                  )
+                }
+                disabled={!pagination.hasNextPage}
+                className="rounded-full border border-[#265D6F] px-4 py-2 text-xs font-semibold text-[#265D6F] disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          ) : null}
         </section>
 
         {showModal ? (
