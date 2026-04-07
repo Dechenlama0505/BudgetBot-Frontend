@@ -2,8 +2,10 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { useExpenses } from "../context/ExpenseContext";
 import { insightsAPI, getCurrentMonth } from "../services/insightsAPI";
+import { expenseAPI } from "../services/expenseAPI";
 import AppBottomNav from "../components/AppBottomNav";
 import ExpenseHistorySection from "../components/ExpenseHistorySection";
+import { showError } from "../utils/toastUtils";
 
 const formatCurrency = (value) => {
   return Number(value || 0).toLocaleString("en-IN", {
@@ -44,33 +46,6 @@ const getPredictionStatusTone = (prediction) => {
   };
 };
 
-const mockExpenseHistory = [
-  {
-    id: "1",
-    category: "Food & Drinks",
-    amount: 450,
-    date: "2026-04-06",
-  },
-  {
-    id: "2",
-    category: "Transport",
-    amount: 200,
-    date: "2026-04-05",
-  },
-  {
-    id: "3",
-    category: "Entertainment",
-    amount: 850,
-    date: "2026-04-03",
-  },
-  {
-    id: "4",
-    category: "Shopping",
-    amount: 1200,
-    date: "2026-04-01",
-  },
-];
-
 const InsightPage = () => {
   const { darkMode } = useTheme();
   const { categoryColors, expenseRefreshKey } = useExpenses();
@@ -84,6 +59,9 @@ const InsightPage = () => {
   const [predictionError, setPredictionError] = useState("");
   const [predictionInfo, setPredictionInfo] = useState("");
   const [predictions, setPredictions] = useState([]);
+  const [expenseHistory, setExpenseHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState("");
 
   // Income vs Spending: fetch once on mount (same for all months)
   useEffect(() => {
@@ -123,6 +101,32 @@ const InsightPage = () => {
       .finally(() => setPredictionLoading(false));
   }, [selectedMonth, expenseRefreshKey]);
 
+  useEffect(() => {
+    setHistoryLoading(true);
+    setHistoryError("");
+
+    expenseAPI
+      .getExpenseHistory(10)
+      .then((res) => {
+        const nextExpenses = (res.data?.expenses || []).map((expense) => ({
+          id: expense._id || expense.id,
+          category: expense.category,
+          amount: expense.amount,
+          date: expense.date,
+        }));
+
+        setExpenseHistory(nextExpenses);
+      })
+      .catch((error) => {
+        const message =
+          error.message || "Failed to load expense history.";
+        setExpenseHistory([]);
+        setHistoryError(message);
+        showError(message);
+      })
+      .finally(() => setHistoryLoading(false));
+  }, [expenseRefreshKey]);
+
   const goPreviousMonth = (e) => {
     e?.preventDefault();
     e?.stopPropagation();
@@ -153,7 +157,6 @@ const InsightPage = () => {
   const totalBudget = insights?.totalBudget ?? 0;
   const categoryBreakdown = insights?.categoryBreakdown ?? [];
   const budgetUsedPercent = insights?.budgetUsedPercent ?? 0;
-  const expenseHistory = mockExpenseHistory;
 
   const radius = 90;
   const circumference = 2 * Math.PI * radius;
@@ -636,7 +639,10 @@ const InsightPage = () => {
           </div>
 
           <ExpenseHistorySection
-            expenses={expenseHistory}
+            title={
+              historyLoading ? "Expense History" : "Expense History"
+            }
+            expenses={historyError ? [] : expenseHistory}
             darkMode={darkMode}
             textMain={textMain}
             textSub={textSub}
@@ -644,6 +650,16 @@ const InsightPage = () => {
             cardBg={darkMode ? "#1E3A45" : "#E8EDF0"}
             categoryColors={categoryColors}
           />
+          {historyLoading ? (
+            <p className="mt-[-8px] mb-4 text-center text-sm" style={{ color: textSub }}>
+              Loading expense history...
+            </p>
+          ) : null}
+          {historyError ? (
+            <p className="mt-[-8px] mb-4 text-center text-sm text-red-600">
+              {historyError}
+            </p>
+          ) : null}
         </div>
 
         <div className="mt-auto w-full">

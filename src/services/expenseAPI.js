@@ -65,4 +65,31 @@ export const expenseAPI = {
     }
     return data;
   },
+
+  getExpenseHistory: async (limit) => {
+    const params = new URLSearchParams();
+
+    if (limit) {
+      params.set("limit", String(limit));
+    }
+
+    const qs = params.toString();
+    const url = `${API_BASE_URL}/api/expenses/history${qs ? `?${qs}` : ""}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to get expense history");
+    }
+
+    return {
+      data: {
+        expenses: Array.isArray(data.expenses) ? data.expenses : [],
+      },
+    };
+  },
 };
