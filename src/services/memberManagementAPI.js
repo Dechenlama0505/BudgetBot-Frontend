@@ -24,6 +24,22 @@ const normalizeListArgs = (searchOrOptions) => {
   };
 };
 
+const filterMembers = (members, search = "", status = "all") => {
+  const normalizedSearch = search.trim().toLowerCase();
+
+  return members.filter((member) => {
+    const matchesSearch =
+      !normalizedSearch ||
+      member.fullName?.toLowerCase().includes(normalizedSearch) ||
+      member.email?.toLowerCase().includes(normalizedSearch) ||
+      member.status?.toLowerCase().includes(normalizedSearch);
+
+    const matchesStatus = status === "all" || member.status === status;
+
+    return matchesSearch && matchesStatus;
+  });
+};
+
 const mapMember = (member) => ({
   id: member.id || member._id,
   fullName: member.fullName,
@@ -65,9 +81,27 @@ const getRoleBasePath = () => {
 export const memberManagementAPI = {
   listMembers: async (searchOrOptions = "") => {
     const { search, status } = normalizeListArgs(searchOrOptions);
-    const page = searchOrOptions?.page || 1;
-    const limit = searchOrOptions?.limit || 100;
     const role = tokenService.getRole();
+
+    if (role === "superadmin") {
+      const payload = await requestJSON(
+        `${API_BASE_URL}/api/superadmin/members`,
+        { method: "GET" },
+        "Failed to load members"
+      );
+      const members = filterMembers(
+        (payload.data?.members || []).map(mapMember),
+        search,
+        status
+      );
+
+      return {
+        data: {
+          members,
+          message: payload.message,
+        },
+      };
+    }
 
     const params = new URLSearchParams();
 
@@ -79,12 +113,9 @@ export const memberManagementAPI = {
       params.set("status", status);
     }
 
-    params.set("page", String(page));
-    params.set("limit", String(limit));
-
     const query = params.toString();
     const payload = await requestJSON(
-      `${role === "superadmin" ? `${API_BASE_URL}/api/superadmin` : getRoleBasePath()}/members${query ? `?${query}` : ""}`,
+      `${getRoleBasePath()}/members${query ? `?${query}` : ""}`,
       { method: "GET" },
       "Failed to load members"
     );
@@ -92,14 +123,6 @@ export const memberManagementAPI = {
     return {
       data: {
         members: (payload.data?.members || []).map(mapMember),
-        pagination: payload.data?.pagination || {
-          page,
-          limit,
-          totalItems: 0,
-          totalPages: 1,
-          hasNextPage: false,
-          hasPrevPage: false,
-        },
         message: payload.message,
       },
     };

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import MobileAppFrame from "../components/MobileAppFrame";
 import SuperAdminBottomNav from "../components/SuperAdminBottomNav";
 import EntityFormModal from "../components/EntityFormModal";
@@ -43,20 +43,9 @@ const getFields = (isEditing) => {
 };
 
 const SuperAdminMembersPage = () => {
-  const PAGE_SIZE = 10;
   const { darkMode } = useTheme();
   const [members, setMembers] = useState([]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: PAGE_SIZE,
-    totalItems: 0,
-    totalPages: 1,
-    hasNextPage: false,
-    hasPrevPage: false,
-  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,42 +54,23 @@ const SuperAdminMembersPage = () => {
   const [editingMemberId, setEditingMemberId] = useState(null);
   const [formValues, setFormValues] = useState(initialForm);
 
-  const loadMembers = useCallback(async (
-    searchValue = "",
-    nextStatus = statusFilter,
-    nextPage = currentPage
-  ) => {
+  const loadMembers = async (searchValue = "") => {
     setIsLoading(true);
     setError("");
 
     try {
-      const response = await memberManagementAPI.listMembers({
-        search: searchValue,
-        status: nextStatus,
-        page: nextPage,
-        limit: PAGE_SIZE,
-      });
+      const response = await memberManagementAPI.listMembers(searchValue);
       setMembers(response.data?.members || []);
-      const nextPagination = response.data?.pagination || pagination;
-      setPagination(nextPagination);
-
-      if (nextPage > nextPagination.totalPages) {
-        setCurrentPage(nextPagination.totalPages);
-      }
     } catch (loadError) {
       setError(loadError.message || "Failed to load members.");
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pagination, statusFilter]);
+  };
 
   useEffect(() => {
-    loadMembers(search, statusFilter, currentPage);
-  }, [currentPage, loadMembers, search, statusFilter]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, statusFilter]);
+    loadMembers(search);
+  }, [search]);
 
   const openCreateModal = () => {
     setEditingMemberId(null);
@@ -158,7 +128,7 @@ const SuperAdminMembersPage = () => {
       }
 
       closeModal();
-      loadMembers(search, statusFilter, currentPage);
+      loadMembers(search);
     } catch (submitError) {
       setFormError(showError(submitError, "Failed to save member."));
     } finally {
@@ -173,7 +143,7 @@ const SuperAdminMembersPage = () => {
     try {
       const response = await memberManagementAPI.deleteMember(memberId);
       showSuccess(response.data?.message || "Member deleted successfully");
-      loadMembers(search, statusFilter, currentPage);
+      loadMembers(search);
     } catch (deleteError) {
       setError(showError(deleteError, "Failed to delete member."));
     }
@@ -184,7 +154,6 @@ const SuperAdminMembersPage = () => {
   const panelBg = darkMode ? "#21414D" : "#E0E6E7";
   const textMain = darkMode ? "#E4EDF2" : "#265D6F";
   const textSub = darkMode ? "#C2D3DB" : "#6E828D";
-  const filterOptions = ["all", "active", "pending", "inactive"];
 
   return (
     <MobileAppFrame
@@ -225,25 +194,6 @@ const SuperAdminMembersPage = () => {
               className="w-full bg-transparent text-sm outline-none"
               style={{ color: textMain }}
             />
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            {filterOptions.map((option) => {
-              const isActive = statusFilter === option;
-
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setStatusFilter(option)}
-                  className={`rounded-full px-4 py-2 text-xs font-semibold capitalize ${
-                    isActive ? "bg-[#265D6F] text-white" : "bg-[#E0E6E7] text-[#265D6F]"
-                  }`}
-                >
-                  {option}
-                </button>
-              );
-            })}
           </div>
 
           {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
@@ -300,34 +250,6 @@ const SuperAdminMembersPage = () => {
               No members found.
             </div>
           )}
-
-          {!isLoading && pagination.totalItems > 0 ? (
-            <div className="mt-4 flex items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={!pagination.hasPrevPage}
-                className="rounded-full border border-[#265D6F] px-4 py-2 text-xs font-semibold text-[#265D6F] disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <p className="text-xs font-semibold" style={{ color: textSub }}>
-                Page {pagination.page} of {pagination.totalPages}
-              </p>
-              <button
-                type="button"
-                onClick={() =>
-                  setCurrentPage((prev) =>
-                    pagination.hasNextPage ? prev + 1 : prev
-                  )
-                }
-                disabled={!pagination.hasNextPage}
-                className="rounded-full border border-[#265D6F] px-4 py-2 text-xs font-semibold text-[#265D6F] disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          ) : null}
         </section>
 
         {showModal ? (
