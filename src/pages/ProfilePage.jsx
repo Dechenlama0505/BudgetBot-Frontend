@@ -12,7 +12,6 @@ const ProfilePage = () => {
 
   const [profileImage, setProfileImage] = useState(null);
   const [showPhotoPrompt, setShowPhotoPrompt] = useState(false);
-  const [notificationsOn, setNotificationsOn] = useState(true);
 
   // User data from API
   const [displayName, setDisplayName] = useState("User");
@@ -197,32 +196,6 @@ const ProfilePage = () => {
             className="mt-4 rounded-[18px] border px-5 py-2"
             style={{ backgroundColor: cardBg, borderColor: panelBg }}
           >
-            {/* Notifications */}
-            <div
-              className="flex items-center justify-between border-b py-2"
-              style={{ borderColor: panelBg }}
-            >
-              <span
-                className="text-sm font-semibold"
-                style={{ color: textMain }}
-              >
-                Notifications
-              </span>
-              <button
-                type="button"
-                onClick={() => setNotificationsOn((v) => !v)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  notificationsOn ? "bg-[#2A5B6C]" : "bg-[#C4CFD4]"
-                }`}
-              >
-                <span
-                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
-                    notificationsOn ? "translate-x-5" : "translate-x-1"
-                  }`}
-                />
-              </button>
-            </div>
-
             {/* Dark mode */}
             <div className="flex items-center justify-between py-2">
               <span

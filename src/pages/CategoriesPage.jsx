@@ -7,6 +7,30 @@ import { tokenService } from "../services/tokenService";
 import { useTheme } from "../context/ThemeContext";
 import { showError, showSuccess } from "../utils/toastUtils";
 
+const FALLBACK_CATEGORY_COLORS = {
+  "Food & Drinks": "#FF8A65",
+  Groceries: "#4DB6AC",
+  Transport: "#7986CB",
+  Saving: "#81C784",
+  Savings: "#81C784",
+  Rent: "#A1887F",
+  Health: "#F06292",
+  Education: "#4FC3F7",
+  Debt: "#E57373",
+  Insurance: "#64B5F6",
+  Internet: "#BA68C8",
+  Investment: "#AED581",
+  Gifts: "#FFB74D",
+  Tax: "#90A4AE",
+  Travel: "#4DD0E1",
+  "Emergency Fund": "#DCE775",
+  "Mobile Bill": "#7986CB",
+  Shopping: "#FF8A80",
+  Entertainment: "#F48FB1",
+  "Home Bills": "#9575CD",
+  Others: "#FFD54F",
+};
+
 const CategoriesPage = () => {
   const navigate = useNavigate();
   const { darkMode } = useTheme();
@@ -95,6 +119,26 @@ const CategoriesPage = () => {
 
   const containerBg = darkMode ? "#1E3A45" : "#E0E6E7";
   const panelBg = darkMode ? "#274956" : "#A8B7C0";
+  const getCategoryIcon = (category) => {
+    if (category?.name === "Home Bills") {
+      return "/homebills.png";
+    }
+
+    if (category?.name === "Savings") {
+      return "/saving.png";
+    }
+
+    return category?.icon || "/others.png";
+  };
+  const getCategoryColor = (category) => {
+    const trimmedName = category?.name?.trim() || "";
+
+    return (
+      category?.color ||
+      FALLBACK_CATEGORY_COLORS[trimmedName] ||
+      "#A0AEC0"
+    );
+  };
 
   return (
     <div
@@ -106,13 +150,6 @@ const CategoriesPage = () => {
         style={{ backgroundColor: containerBg }}
       >
         <div className="flex items-center justify-center rounded-t-[32px] px-4 py-3" style={{ backgroundColor: panelBg }}>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="absolute left-4 text-2xl text-[#265D6F]"
-          >
-            ←
-          </button>
           <h1 className="text-lg font-semibold text-white">Manage Categories</h1>
         </div>
 
@@ -129,24 +166,20 @@ const CategoriesPage = () => {
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#E0E6E7]">
                     <img
-                      src={cat.icon || "/others.png"}
+                      src={getCategoryIcon(cat)}
                       alt={cat.name}
                       className="h-6 w-6 object-contain"
                     />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-[#265D6F]">
-                      {cat.name}
-                    </span>
-                    <div className="mt-1 flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <span
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: cat.color || "#CCCCCC" }}
+                        className="h-3.5 w-3.5 rounded-full border-2 border-white shadow-sm"
+                        style={{ backgroundColor: getCategoryColor(cat) }}
                       />
-                      <span
-                        className="h-3 w-6 rounded"
-                        style={{ backgroundColor: cat.color || "#CCCCCC" }}
-                      />
+                      <span className="text-sm font-semibold text-[#265D6F]">
+                        {cat.name}
+                      </span>
                     </div>
                   </div>
                 </div>

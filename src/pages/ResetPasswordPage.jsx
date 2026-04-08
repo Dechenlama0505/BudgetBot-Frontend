@@ -15,6 +15,7 @@ const ResetPasswordPage = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [showNew, setShowNew] = useState(false);
+  const [showConfirmNew, setShowConfirmNew] = useState(false);
 
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -197,14 +198,29 @@ const ResetPasswordPage = () => {
 
             <div>
               <label className="block text-sm text-[#E2EDF2]">Confirm New Password</label>
-              <input
-                type="password"
-                value={confirmNewPassword}
-                onChange={(e) => setConfirmNewPassword(e.target.value)}
-                className="mt-2 w-full rounded-md border border-[#5C8A99] bg-transparent px-3 py-3 text-sm text-white outline-none focus:border-white placeholder:text-[#8AA3AD]"
-                placeholder="Confirm new password"
-                disabled={isLoading}
-              />
+              <div className="mt-2 flex items-center rounded-md border border-[#5C8A99] bg-transparent px-3 py-1 focus-within:border-white">
+                <input
+                  type={showConfirmNew ? "text" : "password"}
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  className="w-full bg-transparent py-2 text-sm text-white outline-none placeholder:text-[#8AA3AD]"
+                  placeholder="Confirm new password"
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmNew((value) => !value)}
+                  className="ml-2 text-[#D0DEE5]"
+                  disabled={isLoading}
+                  aria-label={
+                    showConfirmNew
+                      ? "Hide confirm new password"
+                      : "Show confirm new password"
+                  }
+                >
+                  {eyeIcon(showConfirmNew)}
+                </button>
+              </div>
             </div>
 
             {error && (

@@ -385,7 +385,7 @@ const HomePage = () => {
               <span>Expenses</span>
               <span>Remaining</span>
               <span>others</span>
-              
+
             </div>
             <div
               className="mt-2 flex justify-between text-sm font-semibold"

@@ -16,6 +16,7 @@ const ChangePasswordPage = () => {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  const [showConfirmNew, setShowConfirmNew] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -231,15 +232,30 @@ const ChangePasswordPage = () => {
               <label className="block text-sm font-semibold" style={{ color: textSub }}>
                 Confirm New Password
               </label>
-              <input
-                type="password"
-                value={confirmNewPassword}
-                onChange={(e) => setConfirmNewPassword(e.target.value)}
-                className="mt-2 w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none disabled:opacity-50 disabled:bg-gray-100"
-                style={{ borderColor: inputBorder, color: textMain }}
-                placeholder="Confirm new password"
-                disabled={isSaving}
-              />
+              <div
+                className="mt-2 flex w-full items-center rounded-lg border bg-white px-3 py-2"
+                style={{ borderColor: inputBorder }}
+              >
+                <input
+                  type={showConfirmNew ? "text" : "password"}
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  className="flex-1 bg-transparent text-sm outline-none disabled:opacity-50"
+                  style={{ color: textMain }}
+                  placeholder="Confirm new password"
+                  disabled={isSaving}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmNew((value) => !value)}
+                  className="ml-2"
+                  style={{ color: textSub }}
+                  disabled={isSaving}
+                  aria-label={showConfirmNew ? "Hide" : "Show"}
+                >
+                  {eyeIcon(showConfirmNew)}
+                </button>
+              </div>
             </div>
           </div>
 

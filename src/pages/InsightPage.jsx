@@ -106,14 +106,14 @@ const InsightPage = () => {
     setHistoryError("");
 
     expenseAPI
-      .getExpenseHistory(10)
+      .getExpenses({ all: true })
       .then((res) => {
         const nextExpenses = (res.data?.expenses || []).map((expense) => ({
           id: expense._id || expense.id,
           category: expense.category,
           amount: expense.amount,
           date: expense.date,
-        }));
+        })).sort((a, b) => new Date(b.date) - new Date(a.date));
 
         setExpenseHistory(nextExpenses);
       })

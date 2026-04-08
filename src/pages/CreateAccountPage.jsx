@@ -11,6 +11,8 @@ const CreateAccount = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [errors, setErrors] = useState({
     fullName: "",
@@ -21,6 +23,34 @@ const CreateAccount = () => {
 
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const eyeIcon = (show) =>
+    show ? (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-5 0-9.27-3.11-11-8 0-1.07.22-2.09.63-3.02" />
+        <path d="M6.06 6.06A10.07 10.07 0 0112 4c5 0 9.27 3.11 11 8-.27.8-.62 1.55-1.05 2.26" />
+        <line x1="1" y1="1" x2="23" y2="23" />
+      </svg>
+    ) : (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    );
 
   const validate = () => {
     const newErrors = {
@@ -177,13 +207,24 @@ const CreateAccount = () => {
             {/* Password */}
             <div>
               <label className="block text-sm text-[#E2EDF2]">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-2 w-full rounded-md border border-[#5C8A99] bg-transparent px-3 py-3 text-sm text-white outline-none focus:border-white"
-                disabled={isLoading}
-              />
+              <div className="mt-2 flex items-center rounded-md border border-[#5C8A99] bg-transparent px-3 py-1 focus-within:border-white">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-transparent py-2 text-sm text-white outline-none"
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  className="ml-2 text-[#D0DEE5]"
+                  disabled={isLoading}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {eyeIcon(showPassword)}
+                </button>
+              </div>
               {errors.password && (
                 <p className="mt-1 text-xs text-red-300">
                   {errors.password}
@@ -196,13 +237,28 @@ const CreateAccount = () => {
               <label className="block text-sm text-[#E2EDF2]">
                 Confirm Password
               </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-2 w-full rounded-md border border-[#5C8A99] bg-transparent px-3 py-3 text-sm text-white outline-none focus:border-white"
-                disabled={isLoading}
-              />
+              <div className="mt-2 flex items-center rounded-md border border-[#5C8A99] bg-transparent px-3 py-1 focus-within:border-white">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full bg-transparent py-2 text-sm text-white outline-none"
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((value) => !value)}
+                  className="ml-2 text-[#D0DEE5]"
+                  disabled={isLoading}
+                  aria-label={
+                    showConfirmPassword
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
+                >
+                  {eyeIcon(showConfirmPassword)}
+                </button>
+              </div>
               {errors.confirmPassword && (
                 <p className="mt-1 text-xs text-red-300">
                   {errors.confirmPassword}

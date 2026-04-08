@@ -20,6 +20,34 @@ const formatDate = (dateString) => {
   });
 };
 
+const getExpenseMonthKey = (dateString) => {
+  const parsedDate = new Date(dateString);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "";
+  }
+
+  return `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, "0")}`;
+};
+
+const formatMonthLabel = (monthKey) => {
+  if (!monthKey) {
+    return "Unknown Month";
+  }
+
+  const [year, month] = monthKey.split("-").map(Number);
+  const parsedDate = new Date(year, (month || 1) - 1, 1);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return monthKey;
+  }
+
+  return parsedDate.toLocaleDateString("en-GB", {
+    month: "long",
+    year: "numeric",
+  });
+};
+
 const ExpenseHistorySection = ({
   title = "Expense History",
   expenses = [],
@@ -30,6 +58,35 @@ const ExpenseHistorySection = ({
   cardBg,
   categoryColors = {},
 }) => {
+  const groupedExpenses = expenses.reduce((groups, expense) => {
+    const monthKey = getExpenseMonthKey(expense.date);
+
+    if (!monthKey) {
+      return groups;
+    }
+
+    if (!groups[monthKey]) {
+      groups[monthKey] = [];
+    }
+
+    groups[monthKey].push(expense);
+    return groups;
+  }, {});
+
+  const monthKeys = Object.keys(groupedExpenses).sort((a, b) =>
+    b.localeCompare(a)
+  );
+
+  const [selectedMonthIndex, setSelectedMonthIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    setSelectedMonthIndex(0);
+  }, [expenses]);
+
+  const safeMonthIndex = Math.min(selectedMonthIndex, Math.max(monthKeys.length - 1, 0));
+  const selectedMonthKey = monthKeys[safeMonthIndex] || "";
+  const visibleExpenses = selectedMonthKey ? groupedExpenses[selectedMonthKey] || [] : [];
+
   return (
     <section
       className="mt-4 mb-4 rounded-[24px] p-4"
@@ -43,7 +100,44 @@ const ExpenseHistorySection = ({
 
       {expenses.length ? (
         <div className="mt-4 space-y-3">
-          {expenses.map((expense) => {
+          <div className="flex items-center justify-between rounded-xl border px-4 py-3"
+            style={{
+              backgroundColor: cardBg,
+              borderColor: darkMode ? "#355B68" : "#D3DCE0",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() =>
+                setSelectedMonthIndex((current) => Math.max(0, current - 1))
+              }
+              disabled={safeMonthIndex <= 0}
+              className="text-sm font-semibold disabled:opacity-40"
+              style={{ color: textMain }}
+            >
+              ←
+            </button>
+
+            <span className="text-sm font-semibold" style={{ color: textMain }}>
+              {formatMonthLabel(selectedMonthKey)}
+            </span>
+
+            <button
+              type="button"
+              onClick={() =>
+                setSelectedMonthIndex((current) =>
+                  Math.min(monthKeys.length - 1, current + 1)
+                )
+              }
+              disabled={safeMonthIndex >= monthKeys.length - 1}
+              className="text-sm font-semibold disabled:opacity-40"
+              style={{ color: textMain }}
+            >
+              →
+            </button>
+          </div>
+
+          {visibleExpenses.map((expense) => {
             const dotColor = categoryColors[expense.category] || "#265D6F";
 
             return (
