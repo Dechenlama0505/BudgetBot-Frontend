@@ -35,7 +35,6 @@ const getFields = (isEditing) => {
     type: "select",
     options: [
       { value: "active", label: "Active" },
-      { value: "pending", label: "Pending" },
       { value: "inactive", label: "Inactive" },
     ],
   });
@@ -69,7 +68,9 @@ const AdminMembersPage = () => {
         search: searchValue,
         status: nextStatus,
       });
-      const nextMembers = response.data?.members || [];
+      const nextMembers = (response.data?.members || []).filter(
+        (member) => member.status !== "pending"
+      );
 
       setMembers(nextMembers);
 
@@ -242,7 +243,7 @@ const AdminMembersPage = () => {
   const panelBg = darkMode ? "#21414D" : "#E0E6E7";
   const textMain = darkMode ? "#E4EDF2" : "#265D6F";
   const textSub = darkMode ? "#C2D3DB" : "#6E828D";
-  const filterOptions = ["all", "active", "pending", "inactive"];
+  const filterOptions = ["all", "active", "inactive"];
 
   return (
     <MobileAppFrame backgroundColor={containerBg} bottomNav={<AdminBottomNav />}>
@@ -340,7 +341,6 @@ const AdminMembersPage = () => {
                         className="rounded-full border border-[#C4CFD4] bg-white px-3 py-2 text-xs font-semibold text-[#265D6F] outline-none"
                       >
                         <option value="active">Active</option>
-                        <option value="pending">Pending</option>
                         <option value="inactive">Inactive</option>
                       </select>
                     </div>

@@ -3,11 +3,10 @@ import { useNavigate } from "react-router-dom";
 import MobileAppFrame from "../components/MobileAppFrame";
 import AdminBottomNav from "../components/AdminBottomNav";
 import { authAPI } from "../services/authAPI";
-import { adminDashboardAPI } from "../services/adminDashboardAPI";
 import { memberManagementAPI } from "../services/memberManagementAPI";
 import { tokenService } from "../services/tokenService";
 import { useTheme } from "../context/ThemeContext";
-import { showError, showSuccess } from "../utils/toastUtils";
+import { showError } from "../utils/toastUtils";
 
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
@@ -17,22 +16,18 @@ const AdminDashboardPage = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeUsers: 0,
-    pendingUsers: 0,
     inactiveUsers: 0,
   });
   const [activity, setActivity] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
 
   const loadDashboard = async () => {
     setIsLoading(true);
-    setError("");
 
     try {
-      const [profileResponse, statsResponse, membersResponse, activityResponse] =
+      const [profileResponse, membersResponse, activityResponse] =
         await Promise.all([
           authAPI.getProfile(),
-          adminDashboardAPI.getDashboardStats(),
           memberManagementAPI.listMembers(),
           memberManagementAPI.listRecentActivity(3),
         ]);
@@ -40,16 +35,20 @@ const AdminDashboardPage = () => {
       const currentUser = profileResponse.data?.user;
       tokenService.setUser(currentUser);
       setAdminName(currentUser?.fullName || "Admin");
+      const nextMembers = Array.isArray(membersResponse.data?.members)
+        ? membersResponse.data.members.filter(
+            (member) => member.status !== "pending"
+          )
+        : [];
+
       setStats({
-        totalUsers: statsResponse.data?.totalUsers || 0,
-        activeUsers: statsResponse.data?.activeUsers || 0,
-        pendingUsers: statsResponse.data?.pendingUsers || 0,
-        inactiveUsers: statsResponse.data?.inactiveUsers || 0,
+        totalUsers: nextMembers.length,
+        activeUsers: nextMembers.filter((member) => member.status === "active").length,
+        inactiveUsers: nextMembers.filter((member) => member.status === "inactive").length,
       });
-      setMembers(membersResponse.data?.members || []);
+      setMembers(nextMembers);
       setActivity(activityResponse.data?.activity || []);
     } catch (loadError) {
-      setError(loadError.message || "Failed to load admin dashboard.");
       showError(loadError, "Failed to load admin dashboard.");
     } finally {
       setIsLoading(false);
@@ -66,26 +65,7 @@ const AdminDashboardPage = () => {
   const textMain = darkMode ? "#E4EDF2" : "#265D6F";
   const textSub = darkMode ? "#C2D3DB" : "#6E828D";
 
-  const pendingMembers = members
-    .filter((member) => member.status === "pending")
-    .slice(0, 3);
   const recentMembers = [...members].slice(0, 4);
-
-  const handleApproval = async (memberId, action) => {
-    try {
-      let response;
-      if (action === "approve") {
-        response = await memberManagementAPI.approveMember(memberId);
-      } else {
-        response = await memberManagementAPI.rejectMember(memberId);
-      }
-
-      showSuccess(response.data?.message || "Member updated successfully");
-      loadDashboard();
-    } catch (actionError) {
-      setError(showError(actionError, "Failed to update member approval."));
-    }
-  };
 
   const handleOpenMember = (memberId) => {
     navigate("/admin/members", {
@@ -144,7 +124,6 @@ const AdminDashboardPage = () => {
           {[
             { label: "Total Members", value: stats.totalUsers },
             { label: "Active Members", value: stats.activeUsers },
-            { label: "Pending Members", value: stats.pendingUsers },
             { label: "Inactive Members", value: stats.inactiveUsers },
           ].map((item) => (
             <div
@@ -160,70 +139,6 @@ const AdminDashboardPage = () => {
               </p>
             </div>
           ))}
-        </section>
-
-        <section className="mt-4 rounded-[22px] px-5 py-4" style={{ backgroundColor: cardBg }}>
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold" style={{ color: textMain }}>
-              Pending Approvals
-            </h2>
-            <button
-              type="button"
-              onClick={() => navigate("/admin/members")}
-              className="text-xs font-semibold text-[#265D6F]"
-            >
-              View All
-            </button>
-          </div>
-
-          {error ? (
-            <p className="mt-4 text-sm text-red-600">{error}</p>
-          ) : pendingMembers.length ? (
-            <div className="mt-3 space-y-3">
-              {pendingMembers.map((member) => (
-                <div
-                  key={member.id}
-                  className="rounded-[18px] px-4 py-4"
-                  style={{ backgroundColor: panelBg }}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold" style={{ color: textMain }}>
-                        {member.fullName}
-                      </p>
-                      <p className="mt-1 text-xs" style={{ color: textSub }}>
-                        {member.email}
-                      </p>
-                    </div>
-                    <span className="rounded-full bg-[#F8E7C8] px-3 py-1 text-[11px] font-semibold text-[#805C17]">
-                      {member.status}
-                    </span>
-                  </div>
-
-                  <div className="mt-4 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleApproval(member.id, "approve")}
-                      className="rounded-full bg-[#265D6F] px-4 py-2 text-xs font-semibold text-white"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleApproval(member.id, "reject")}
-                      className="rounded-full border border-[#9F4B4B] px-4 py-2 text-xs font-semibold text-[#9F4B4B]"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="mt-4 rounded-[18px] border border-dashed border-[#C4CFD4] px-4 py-8 text-center text-sm text-[#6E828D]">
-              No pending approvals
-            </div>
-          )}
         </section>
 
         <section className="mt-4 rounded-[22px] px-5 py-4" style={{ backgroundColor: cardBg }}>
