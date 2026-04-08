@@ -14,6 +14,7 @@ const SuperAdminDashboardPage = () => {
   const [displayName, setDisplayName] = useState("Superadmin");
   const [membersCount, setMembersCount] = useState(0);
   const [adminsCount, setAdminsCount] = useState(0);
+  const [superAdminsCount, setSuperAdminsCount] = useState(0);
   const [activity, setActivity] = useState([]);
   const [recentMembers, setRecentMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,6 +38,7 @@ const SuperAdminDashboardPage = () => {
         setDisplayName(currentUser?.fullName || "Superadmin");
         setMembersCount(stats.totalUsers || 0);
         setAdminsCount(stats.totalAdmins || 0);
+        setSuperAdminsCount(stats.totalSuperAdmins || 0);
         setRecentMembers(recentMembersResponse.data || stats.recentUsers || []);
         setActivity((activityResponse.data || stats.recentActivity || []).slice(0, 3));
       } catch (loadError) {
@@ -96,11 +98,12 @@ const SuperAdminDashboardPage = () => {
           </div>
         </section>
 
-        <section className="mt-4 grid grid-cols-3 gap-3">
+        <section className="mt-4 grid grid-cols-2 gap-3">
           {[
             { label: "Members", value: membersCount },
             { label: "Admins", value: adminsCount },
-            { label: "Total", value: membersCount + adminsCount },
+            { label: "Super Admins", value: superAdminsCount },
+            { label: "Total", value: membersCount + adminsCount + superAdminsCount },
           ].map((item) => (
             <div
               key={item.label}
