@@ -15,6 +15,8 @@ import ChangePasswordPage from "./pages/ChangePasswordPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminActivityPage from "./pages/AdminActivityPage";
+import AdminAllMembersPage from "./pages/AdminAllMembersPage";
 import AdminMembersPage from "./pages/AdminMembersPage";
 import AdminProfilePage from "./pages/AdminProfilePage";
 import SuperAdminDashboardPage from "./pages/SuperAdminDashboardPage";
@@ -54,6 +56,8 @@ const App = () => {
 
         <Route element={<AdminRoute />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+          <Route path="/admin/activity" element={<AdminActivityPage />} />
+          <Route path="/admin/all-members" element={<AdminAllMembersPage />} />
           <Route path="/admin/members" element={<AdminMembersPage />} />
           <Route path="/admin/profile" element={<AdminProfilePage />} />
         </Route>

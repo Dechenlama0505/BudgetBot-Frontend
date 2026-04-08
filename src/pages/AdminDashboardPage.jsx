@@ -37,8 +37,8 @@ const AdminDashboardPage = () => {
       setAdminName(currentUser?.fullName || "Admin");
       const nextMembers = Array.isArray(membersResponse.data?.members)
         ? membersResponse.data.members.filter(
-            (member) => member.status !== "pending"
-          )
+          (member) => member.status !== "pending"
+        )
         : [];
 
       setStats({
@@ -100,7 +100,7 @@ const AdminDashboardPage = () => {
                 Hello, {adminName}
               </h1>
               <p className="mt-2 text-sm" style={{ color: textSub }}>
-                Manage members from the same mobile flow as the rest of BudgetBot.
+                Manage members.
               </p>
               <button
                 type="button"
@@ -148,8 +148,8 @@ const AdminDashboardPage = () => {
             </h2>
             <button
               type="button"
-              onClick={() => navigate("/admin/members")}
-              className="text-xs font-semibold text-[#265D6F]"
+              onClick={() => navigate("/admin/all-members")}
+              className="rounded-full border border-[#265D6F] px-3 py-1 text-[11px] font-semibold text-[#265D6F]"
             >
               View All
             </button>
@@ -193,6 +193,13 @@ const AdminDashboardPage = () => {
             <h2 className="text-sm font-semibold" style={{ color: textMain }}>
               Recent Activity
             </h2>
+            <button
+              type="button"
+              onClick={() => navigate("/admin/activity")}
+              className="rounded-full border border-[#265D6F] px-3 py-1 text-[11px] font-semibold text-[#265D6F]"
+            >
+              View All
+            </button>
           </div>
 
           {activity.length ? (
