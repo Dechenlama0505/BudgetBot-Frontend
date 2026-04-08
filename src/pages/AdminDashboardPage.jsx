@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import MobileAppFrame from "../components/MobileAppFrame";
 import AdminBottomNav from "../components/AdminBottomNav";
 import { authAPI } from "../services/authAPI";
+import { adminDashboardAPI } from "../services/adminDashboardAPI";
 import { memberManagementAPI } from "../services/memberManagementAPI";
 import { tokenService } from "../services/tokenService";
 import { useTheme } from "../context/ThemeContext";
@@ -17,6 +18,7 @@ const AdminDashboardPage = () => {
     totalUsers: 0,
     activeUsers: 0,
     inactiveUsers: 0,
+    totalAdmins: 0,
   });
   const [activity, setActivity] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,9 +27,10 @@ const AdminDashboardPage = () => {
     setIsLoading(true);
 
     try {
-      const [profileResponse, membersResponse, activityResponse] =
+      const [profileResponse, statsResponse, membersResponse, activityResponse] =
         await Promise.all([
           authAPI.getProfile(),
+          adminDashboardAPI.getDashboardStats(),
           memberManagementAPI.listMembers(),
           memberManagementAPI.listRecentActivity(3),
         ]);
@@ -35,6 +38,7 @@ const AdminDashboardPage = () => {
       const currentUser = profileResponse.data?.user;
       tokenService.setUser(currentUser);
       setAdminName(currentUser?.fullName || "Admin");
+      const dashboardStats = statsResponse?.data?.data || statsResponse?.data || {};
       const nextMembers = Array.isArray(membersResponse.data?.members)
         ? membersResponse.data.members.filter(
           (member) => member.status !== "pending"
@@ -42,9 +46,14 @@ const AdminDashboardPage = () => {
         : [];
 
       setStats({
-        totalUsers: nextMembers.length,
-        activeUsers: nextMembers.filter((member) => member.status === "active").length,
-        inactiveUsers: nextMembers.filter((member) => member.status === "inactive").length,
+        totalUsers: dashboardStats.totalUsers ?? nextMembers.length,
+        activeUsers:
+          dashboardStats.activeUsers ??
+          nextMembers.filter((member) => member.status === "active").length,
+        inactiveUsers:
+          dashboardStats.inactiveUsers ??
+          nextMembers.filter((member) => member.status === "inactive").length,
+        totalAdmins: dashboardStats.totalAdmins ?? 0,
       });
       setMembers(nextMembers);
       setActivity(activityResponse.data?.activity || []);
@@ -125,6 +134,7 @@ const AdminDashboardPage = () => {
             { label: "Total Members", value: stats.totalUsers },
             { label: "Active Members", value: stats.activeUsers },
             { label: "Inactive Members", value: stats.inactiveUsers },
+            { label: "Total Admins", value: stats.totalAdmins },
           ].map((item) => (
             <div
               key={item.label}
