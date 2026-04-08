@@ -159,6 +159,13 @@ const SuperAdminDashboardPage = () => {
             <h2 className="text-sm font-semibold" style={{ color: textMain }}>
               Recent Members
             </h2>
+            <button
+              type="button"
+              onClick={() => navigate("/superadmin/all-members")}
+              className="rounded-full border border-[#265D6F] px-3 py-1 text-[11px] font-semibold text-[#265D6F]"
+            >
+              View All
+            </button>
           </div>
 
           {recentMembers.length ? (

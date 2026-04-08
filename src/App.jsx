@@ -19,6 +19,7 @@ import AdminMembersPage from "./pages/AdminMembersPage";
 import AdminProfilePage from "./pages/AdminProfilePage";
 import SuperAdminDashboardPage from "./pages/SuperAdminDashboardPage";
 import SuperAdminActivityPage from "./pages/SuperAdminActivityPage";
+import SuperAdminAllMembersPage from "./pages/SuperAdminAllMembersPage";
 import SuperAdminMembersPage from "./pages/SuperAdminMembersPage";
 import SuperAdminAdminsPage from "./pages/SuperAdminAdminsPage";
 import SuperAdminProfilePage from "./pages/SuperAdminProfilePage";
@@ -65,6 +66,10 @@ const App = () => {
           <Route
             path="/superadmin/activity"
             element={<SuperAdminActivityPage />}
+          />
+          <Route
+            path="/superadmin/all-members"
+            element={<SuperAdminAllMembersPage />}
           />
           <Route
             path="/superadmin/members"
