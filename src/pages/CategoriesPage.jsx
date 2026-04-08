@@ -119,6 +119,9 @@ const CategoriesPage = () => {
 
   const containerBg = darkMode ? "#1E3A45" : "#E0E6E7";
   const panelBg = darkMode ? "#274956" : "#A8B7C0";
+  const innerCardBg = darkMode ? "#21414D" : "#ECF1F3";
+  const textMain = darkMode ? "#E4EDF2" : "#265D6F";
+  const textSub = darkMode ? "#C2D3DB" : "#6E828D";
   const getCategoryIcon = (category) => {
     if (category?.name === "Home Bills") {
       return "/homebills.png";
@@ -155,16 +158,36 @@ const CategoriesPage = () => {
 
         <div className="flex-1 overflow-y-auto px-4 pt-4 pb-3">
           {error && (
-            <p className="mb-3 text-center text-sm text-red-600">{error}</p>
+            <div className="mb-3 rounded-[18px] border border-red-300/50 bg-red-100/70 px-4 py-3 text-center text-sm text-red-700">
+              {error}
+            </div>
           )}
-          <div className="rounded-[20px] px-4 py-3" style={{ backgroundColor: panelBg }}>
-            {categories.map((cat) => (
+          <div className="rounded-[24px] px-4 py-4 shadow-[0_16px_30px_rgba(21,39,49,0.08)]" style={{ backgroundColor: panelBg }}>
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: textSub }}>
+                  Category Library
+                </p>
+                <p className="mt-1 text-sm" style={{ color: textMain }}>
+                  Organize what shows up in your budget setup.
+                </p>
+              </div>
+              <span className="rounded-full bg-white/40 px-3 py-1 text-[11px] font-semibold" style={{ color: textMain }}>
+                {categories.length} total
+              </span>
+            </div>
+            {categories.length === 0 ? (
+              <div className="rounded-[18px] border border-dashed border-white/40 px-4 py-10 text-center text-sm" style={{ color: textSub }}>
+                No categories available yet.
+              </div>
+            ) : categories.map((cat) => (
               <div
                 key={cat._id || cat.name}
-                className="relative flex items-center justify-between border-b border-[#C4CFD4] py-3 last:border-b-0"
+                className="relative mb-3 flex items-center justify-between rounded-[20px] px-3 py-3 last:mb-0"
+                style={{ backgroundColor: innerCardBg }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#E0E6E7]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/70">
                     <img
                       src={getCategoryIcon(cat)}
                       alt={cat.name}
@@ -177,10 +200,13 @@ const CategoriesPage = () => {
                         className="h-3.5 w-3.5 rounded-full border-2 border-white shadow-sm"
                         style={{ backgroundColor: getCategoryColor(cat) }}
                       />
-                      <span className="text-sm font-semibold text-[#265D6F]">
+                      <span className="text-sm font-semibold" style={{ color: textMain }}>
                         {cat.name}
                       </span>
                     </div>
+                    <p className="mt-1 text-[11px]" style={{ color: textSub }}>
+                      {isInBudget(cat.name) ? "Included in your budget setup" : "Not added to your budget yet"}
+                    </p>
                   </div>
                 </div>
 
@@ -188,12 +214,13 @@ const CategoriesPage = () => {
                   <button
                     type="button"
                     onClick={() => handleDotClick(cat._id || cat.name)}
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-[#265D6F] hover:bg-[#E0E6E7]"
+                    className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-white/60"
+                    style={{ color: textMain }}
                   >
                     <span className="flex flex-col items-center justify-between">
-                      <span className="h-1 w-1 rounded-full bg-[#265D6F]" />
-                      <span className="mt-0.5 h-1 w-1 rounded-full bg-[#265D6F]" />
-                      <span className="mt-0.5 h-1 w-1 rounded-full bg-[#265D6F]" />
+                      <span className="h-1 w-1 rounded-full" style={{ backgroundColor: textMain }} />
+                      <span className="mt-0.5 h-1 w-1 rounded-full" style={{ backgroundColor: textMain }} />
+                      <span className="mt-0.5 h-1 w-1 rounded-full" style={{ backgroundColor: textMain }} />
                     </span>
                   </button>
 

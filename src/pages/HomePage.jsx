@@ -174,6 +174,10 @@ const HomePage = () => {
   const textMain = darkMode ? "#E4EDF2" : "#265D6F";
   const textSub = darkMode ? "#C2D3DB" : "#6E828D";
   const progressBg = darkMode ? "#355B68" : "#C4CFD4";
+  const stateCardStyle = {
+    backgroundColor: darkMode ? "#274956" : "#F1F5F6",
+    borderColor: darkMode ? "#355B68" : "#D7E0E4",
+  };
 
   const maxBudget = monthlyIncome ?? 0;
   const budgetUsedPct = totalBudget > 0 ? Math.min(100, (monthExpenses / totalBudget) * 100) : 0;
@@ -279,7 +283,7 @@ const HomePage = () => {
           {/* Greeting card */}
           <section
             className="mb-4 rounded-[26px] px-6 py-5"
-            style={{ backgroundColor: cardBg }}
+            style={{ backgroundColor: cardBg, boxShadow: "0 16px 30px rgba(21,39,49,0.08)" }}
           >
             <div className="flex flex-col items-center">
               <div className="mb-3 flex h-20 w-20 items-center justify-center rounded-3xl bg-[#2A5B6C]">
@@ -290,18 +294,21 @@ const HomePage = () => {
                 />
               </div>
               <h2
-                className="text-xl font-semibold"
+                className="text-xl font-semibold tracking-[-0.02em]"
                 style={{ color: textMain }}
               >
                 Hello, {userName}
               </h2>
+              <p className="mt-1 text-xs" style={{ color: textSub }}>
+                Keep your monthly plan clear and intentional.
+              </p>
             </div>
           </section>
 
           {/* This Month's Budget */}
           <section
             className="mb-3 rounded-[22px] px-6 py-3"
-            style={{ backgroundColor: cardBg }}
+            style={{ backgroundColor: cardBg, boxShadow: "0 14px 28px rgba(21,39,49,0.06)" }}
           >
             <div className="flex items-center justify-between text-sm font-semibold">
               <span style={{ color: textMain }}>This Month&apos;s Budget</span>
@@ -321,20 +328,20 @@ const HomePage = () => {
                 : "Set your total budget (max: income)"}
             </p>
             {showBudgetInput ? (
-              <div className="mt-2 flex gap-2">
+              <div className="mt-3 flex gap-2">
                 <input
                   type="text"
                   inputMode="numeric"
                   value={budgetInput}
                   onChange={(e) => setBudgetInput(e.target.value)}
                   placeholder={`Max Rs. ${maxBudget.toLocaleString()}`}
-                  className="flex-1 rounded-lg border px-3 py-2 text-sm outline-none"
-                  style={{ borderColor: progressBg }}
+                  className="flex-1 rounded-xl border bg-white px-3 py-2 text-sm outline-none"
+                  style={{ borderColor: progressBg, color: textMain }}
                 />
                 <button
                   type="button"
                   onClick={handleSetBudget}
-                  className="rounded-lg bg-[#265D6F] px-3 py-2 text-sm font-semibold text-white"
+                  className="rounded-xl bg-[#265D6F] px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(11,26,33,0.14)]"
                 >
                   Set
                 </button>
@@ -345,7 +352,7 @@ const HomePage = () => {
                     setBudgetInput("");
                     setBudgetError("");
                   }}
-                  className="rounded-lg border px-3 py-2 text-sm"
+                  className="rounded-xl border px-3 py-2 text-sm"
                   style={{ borderColor: progressBg, color: textMain }}
                 >
                   Cancel
@@ -355,7 +362,7 @@ const HomePage = () => {
               <button
                 type="button"
                 onClick={() => setShowBudgetInput(true)}
-                className="mt-2 text-xs font-medium"
+                className="mt-3 text-xs font-semibold uppercase tracking-[0.08em]"
                 style={{ color: "#3A6B7A" }}
               >
                 {totalBudget > 0 ? "Edit Budget" : "Set Budget"}
@@ -378,35 +385,43 @@ const HomePage = () => {
           {/* Income / Expenses / Remaining */}
           <section
             className="mb-4 rounded-[22px] px-6 py-4"
-            style={{ backgroundColor: cardBg }}
+            style={{ backgroundColor: cardBg, boxShadow: "0 14px 28px rgba(21,39,49,0.06)" }}
           >
-            <div className="flex justify-between text-xs" style={{ color: textSub }}>
-              <span>Income</span>
-              <span>Expenses</span>
-              <span>Remaining</span>
-              <span>others</span>
-
-            </div>
-            <div
-              className="mt-2 flex justify-between text-sm font-semibold"
-              style={{ color: textMain }}
-            >
-              <span>Rs. {monthlyIncome != null ? monthlyIncome.toLocaleString() : "0"}</span>
-              <span>Rs. {monthExpenses.toLocaleString()}</span>
-              <span
-                style={{
-                  color: remaining < 0 ? "#dc2626" : textMain,
-                }}
-              >
-                Rs. {remaining.toLocaleString()}
-              </span>
-              <span>Rs. 0</span>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                {
+                  label: "Income",
+                  value: `Rs. ${monthlyIncome != null ? monthlyIncome.toLocaleString() : "0"}`,
+                },
+                {
+                  label: "Expenses",
+                  value: `Rs. ${monthExpenses.toLocaleString()}`,
+                },
+                {
+                  label: "Remaining",
+                  value: `Rs. ${remaining.toLocaleString()}`,
+                  valueColor: remaining < 0 ? "#dc2626" : textMain,
+                },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-[18px] px-3 py-3"
+                  style={stateCardStyle}
+                >
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: textSub }}>
+                    {item.label}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold" style={{ color: item.valueColor || textMain }}>
+                    {item.value}
+                  </p>
+                </div>
+              ))}
             </div>
           </section>
 
           <section
             className="mb-4 rounded-[22px] px-6 py-4"
-            style={{ backgroundColor: cardBg }}
+            style={{ backgroundColor: cardBg, boxShadow: "0 14px 28px rgba(21,39,49,0.06)" }}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -417,25 +432,25 @@ const HomePage = () => {
                   AI Budget Alert
                 </h3>
                 {predictionLoading ? (
-                  <p className="mt-2 text-[11px]" style={{ color: textSub }}>
+                  <p className="mt-3 text-[11px]" style={{ color: textSub }}>
                     Loading AI insight...
                   </p>
                 ) : predictionError ? (
-                  <p className="mt-2 text-[11px]" style={{ color: "#dc2626" }}>
+                  <div className="mt-3 rounded-[16px] border border-red-300/50 bg-red-100/70 px-3 py-3 text-[11px]" style={{ color: "#dc2626" }}>
                     {predictionError}
-                  </p>
+                  </div>
                 ) : predictionInfo ? (
-                  <p className="mt-2 text-[11px] leading-5" style={{ color: textSub }}>
+                  <p className="mt-3 text-[11px] leading-5" style={{ color: textSub }}>
                     {predictionInfo}
                   </p>
                 ) : topPrediction ? (
-                  <p className="mt-2 text-[11px] leading-5" style={{ color: textSub }}>
+                  <p className="mt-3 text-[11px] leading-5" style={{ color: textSub }}>
                     {topPrediction.message}
                   </p>
                 ) : (
-                  <p className="mt-2 text-[11px]" style={{ color: textSub }}>
+                  <div className="mt-3 rounded-[16px] border border-dashed px-3 py-3 text-[11px]" style={{ ...stateCardStyle, color: textSub }}>
                     No AI insights available for this month.
-                  </p>
+                  </div>
                 )}
               </div>
 
@@ -454,7 +469,7 @@ const HomePage = () => {
           {/* Set Your Budget card */}
           <section
             className="flex-1 rounded-[26px] px-6 py-5"
-            style={{ backgroundColor: cardBg }}
+            style={{ backgroundColor: cardBg, boxShadow: "0 18px 34px rgba(21,39,49,0.07)" }}
           >
             <h3
               className="text-lg font-semibold"
@@ -483,15 +498,15 @@ const HomePage = () => {
               style={{ color: textMain }}
             >
               {budgetCategories.length === 0 ? (
-                <p className="text-sm" style={{ color: textSub }}>
+                <div className="rounded-[18px] border border-dashed px-4 py-6 text-sm" style={{ ...stateCardStyle, color: textSub }}>
                   No categories added yet. Customize your categories to set budget allocation.
-                </p>
+                </div>
               ) : (
                 budgetCategories.map((catName) => {
                   const pct = allocations[catName] ?? 0;
                   const amount = (budgetBaseForCategoryDisplay * pct) / 100;
                   return (
-                    <div key={catName}>
+                    <div key={catName} className="rounded-[18px] px-3 py-3" style={stateCardStyle}>
                       <div className="flex items-center justify-between">
                         <span>{catName}</span>
                         <span>{pct}% — Rs. {amount.toLocaleString()}</span>
@@ -516,10 +531,10 @@ const HomePage = () => {
             </div>
 
             {saveMessage && (
-              <p className="mt-3 text-center text-sm text-green-600">{saveMessage}</p>
+              <div className="mt-4 rounded-[18px] border border-green-300 bg-green-100/80 px-4 py-3 text-center text-sm text-green-700">{saveMessage}</div>
             )}
             {saveError && (
-              <p className="mt-3 text-center text-sm text-red-600">{saveError}</p>
+              <div className="mt-4 rounded-[18px] border border-red-300 bg-red-100/80 px-4 py-3 text-center text-sm text-red-700">{saveError}</div>
             )}
 
             {/* Customize Categories */}
@@ -536,7 +551,7 @@ const HomePage = () => {
               <button
                 type="button"
                 onClick={handleSaveBudget}
-                className="w-40 rounded-full bg-[#265D6F] py-3 text-sm font-semibold text-[#E0E6E7]"
+                className="w-40 rounded-full bg-[#265D6F] py-3 text-sm font-semibold text-[#E0E6E7] shadow-[0_12px_24px_rgba(11,26,33,0.14)] transition hover:translate-y-[-1px]"
               >
                 Save Budget
               </button>

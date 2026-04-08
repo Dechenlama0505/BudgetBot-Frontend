@@ -152,6 +152,8 @@ const InsightPage = () => {
   const panelBg = darkMode ? "#2F5A68" : "#A8B7C0";
   const textMain = darkMode ? "#E4EDF2" : "#265D6F";
   const textSub = darkMode ? "#C2D3DB" : "#6E828D";
+  const innerPanelBg = darkMode ? "#1E3A45" : "#E8EDF0";
+  const sectionShadow = "0 14px 28px rgba(21,39,49,0.07)";
 
   const totalSpent = insights?.totalSpent ?? 0;
   const totalBudget = insights?.totalBudget ?? 0;
@@ -198,9 +200,9 @@ const InsightPage = () => {
           {/* Income vs Spending Bar Chart - last 4 months */}
           {incomeVsData.length > 0 && (
             <div
-              className="mt-5 rounded-[24px] p-4"
-              style={{ backgroundColor: panelBg }}
-            >
+            className="mt-5 rounded-[24px] p-4"
+            style={{ backgroundColor: panelBg, boxShadow: sectionShadow }}
+          >
               <h2
                 className="mb-3 text-center text-sm font-semibold"
                 style={{ color: textMain }}
@@ -278,7 +280,7 @@ const InsightPage = () => {
           {/* Total Spending / Pie Chart - filtered by selected month */}
           <div
             className="relative mt-5 rounded-[24px] p-5"
-            style={{ backgroundColor: panelBg }}
+            style={{ backgroundColor: panelBg, boxShadow: sectionShadow }}
           >
             {monthLoading && (
               <div
@@ -368,7 +370,7 @@ const InsightPage = () => {
                 </svg>
               ) : (
                 <div
-                  className="flex h-[220px] w-[220px] items-center justify-center rounded-full border text-center text-sm"
+                  className="flex h-[220px] w-[220px] items-center justify-center rounded-full border bg-white/15 text-center text-sm"
                   style={{ borderColor: textSub, color: textSub }}
                 >
                   No spending data yet
@@ -399,7 +401,7 @@ const InsightPage = () => {
           {/* Spending vs Budget - Bar graphs per category */}
           <div
             className="relative mt-4 rounded-[24px] p-4"
-            style={{ backgroundColor: panelBg }}
+            style={{ backgroundColor: panelBg, boxShadow: sectionShadow }}
           >
             {monthLoading && (
               <div
@@ -439,11 +441,9 @@ const InsightPage = () => {
                   return (
                     <div
                       key={item.category}
-                      className="rounded-xl border p-3"
+                      className="rounded-[18px] border p-3"
                       style={{
-                        backgroundColor: darkMode
-                          ? "#1E3A45"
-                          : "#E8EDF0",
+                        backgroundColor: innerPanelBg,
                         borderColor: darkMode ? "#355B68" : "#D3DCE0",
                       }}
                     >
@@ -517,7 +517,7 @@ const InsightPage = () => {
 
           <div
             className="relative mt-4 mb-4 rounded-[24px] p-4"
-            style={{ backgroundColor: panelBg }}
+            style={{ backgroundColor: panelBg, boxShadow: sectionShadow }}
           >
             {predictionLoading && (
               <div
@@ -562,9 +562,9 @@ const InsightPage = () => {
                   return (
                     <div
                       key={item.category}
-                      className="rounded-xl border p-4"
-                      style={{
-                        backgroundColor: darkMode ? "#1E3A45" : "#E8EDF0",
+                    className="rounded-[18px] border p-4"
+                    style={{
+                        backgroundColor: innerPanelBg,
                         borderColor: darkMode ? "#355B68" : "#D3DCE0",
                       }}
                     >
@@ -651,14 +651,14 @@ const InsightPage = () => {
             categoryColors={categoryColors}
           />
           {historyLoading ? (
-            <p className="mt-[-8px] mb-4 text-center text-sm" style={{ color: textSub }}>
+            <div className="mt-[-4px] mb-4 rounded-[18px] border px-4 py-3 text-center text-sm" style={{ backgroundColor: darkMode ? "#274956" : "#F1F5F6", borderColor: darkMode ? "#355B68" : "#D7E0E4", color: textSub }}>
               Loading expense history...
-            </p>
+            </div>
           ) : null}
           {historyError ? (
-            <p className="mt-[-8px] mb-4 text-center text-sm text-red-600">
+            <div className="mt-[-4px] mb-4 rounded-[18px] border border-red-300 bg-red-100/80 px-4 py-3 text-center text-sm text-red-700">
               {historyError}
-            </p>
+            </div>
           ) : null}
         </div>
 

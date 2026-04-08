@@ -23,6 +23,8 @@ const CreateAccount = () => {
 
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const fieldClassName =
+    "mt-2 w-full rounded-xl border border-[#5C8A99] bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-[#AFC1C8] focus:border-white focus:bg-white/10";
 
   const eyeIcon = (show) =>
     show ? (
@@ -157,8 +159,11 @@ const CreateAccount = () => {
         <div className="relative z-10 flex flex-1 flex-col px-8 pb-10">
           {/* heading section */}
           <div className="mt-6">
-            <h1 className="text-4xl font-bold text-white">Welcome!</h1>
-            <p className="mt-2 text-sm text-[#C4D0D8]">
+            <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#D8E5EA]">
+              Create Account
+            </span>
+            <h1 className="mt-4 text-4xl font-bold tracking-[-0.03em] text-white">Welcome!</h1>
+            <p className="mt-3 max-w-[280px] text-sm leading-6 text-[#C4D0D8]">
               Create an account to join BudgetBot
             </p>
           </div>
@@ -166,20 +171,21 @@ const CreateAccount = () => {
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             {/* API Error Display */}
             {apiError && (
-              <div className="rounded-md bg-red-900/30 border border-red-400/50 px-3 py-2">
+              <div className="rounded-xl border border-red-400/40 bg-red-900/20 px-4 py-3">
                 <p className="text-xs text-red-300">{apiError}</p>
               </div>
             )}
 
             {/* Full Name */}
             <div>
-              <label className="block text-sm text-[#E2EDF2]">Full Name</label>
+              <label className="block text-sm font-medium text-[#E2EDF2]">Full Name</label>
               <input
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="mt-2 w-full rounded-md border border-[#5C8A99] bg-transparent px-3 py-3 text-sm text-white outline-none focus:border-white"
+                className={fieldClassName}
                 maxLength={100}
+                placeholder="Enter your full name"
                 disabled={isLoading}
               />
               {errors.fullName && (
@@ -191,12 +197,13 @@ const CreateAccount = () => {
 
             {/* Email */}
             <div>
-              <label className="block text-sm text-[#E2EDF2]">E-mail</label>
+              <label className="block text-sm font-medium text-[#E2EDF2]">E-mail</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 w-full rounded-md border border-[#5C8A99] bg-transparent px-3 py-3 text-sm text-white outline-none focus:border-white"
+                className={fieldClassName}
+                placeholder="yourname@gmail.com"
                 disabled={isLoading}
               />
               {errors.email && (
@@ -206,13 +213,14 @@ const CreateAccount = () => {
 
             {/* Password */}
             <div>
-              <label className="block text-sm text-[#E2EDF2]">Password</label>
-              <div className="mt-2 flex items-center rounded-md border border-[#5C8A99] bg-transparent px-3 py-1 focus-within:border-white">
+              <label className="block text-sm font-medium text-[#E2EDF2]">Password</label>
+              <div className="mt-2 flex items-center rounded-xl border border-[#5C8A99] bg-white/5 px-4 py-1 transition focus-within:border-white focus-within:bg-white/10">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-transparent py-2 text-sm text-white outline-none"
+                  className="w-full bg-transparent py-2 text-sm text-white outline-none placeholder:text-[#AFC1C8]"
+                  placeholder="Create a password"
                   disabled={isLoading}
                 />
                 <button
@@ -237,12 +245,13 @@ const CreateAccount = () => {
               <label className="block text-sm text-[#E2EDF2]">
                 Confirm Password
               </label>
-              <div className="mt-2 flex items-center rounded-md border border-[#5C8A99] bg-transparent px-3 py-1 focus-within:border-white">
+              <div className="mt-2 flex items-center rounded-xl border border-[#5C8A99] bg-white/5 px-4 py-1 transition focus-within:border-white focus-within:bg-white/10">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full bg-transparent py-2 text-sm text-white outline-none"
+                  className="w-full bg-transparent py-2 text-sm text-white outline-none placeholder:text-[#AFC1C8]"
+                  placeholder="Re-enter your password"
                   disabled={isLoading}
                 />
                 <button
@@ -273,7 +282,7 @@ const CreateAccount = () => {
               type="submit"
               onClick={handleSubmit}
               disabled={isLoading}
-              className="w-3/4 rounded-full bg-[#A8B7C0] py-3 text-sm font-semibold text-[#265D6F] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-3/4 rounded-full bg-[#A8B7C0] py-3 text-sm font-semibold text-[#265D6F] shadow-[0_10px_24px_rgba(11,26,33,0.18)] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? "Creating Account..." : "Sign Up"}
             </button>

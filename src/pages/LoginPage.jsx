@@ -18,6 +18,8 @@ const LoginPage = () => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const fieldClassName =
+    "mt-2 w-full rounded-xl border border-[#5C8A99] bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-[#AFC1C8] focus:border-white focus:bg-white/10";
 
   const validate = () => {
     const newErrors = { email: "", password: "", credentials: "" };
@@ -102,8 +104,11 @@ const LoginPage = () => {
         <div className="relative z-10 flex flex-1 flex-col px-8 pb-10">
           {/* heading section, aligned like Figma */}
           <div className="mt-6">
-            <h1 className="text-4xl font-bold text-white">Welcome Back!</h1>
-            <p className="mt-2 text-sm text-[#C4D0D8]">
+            <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#D8E5EA]">
+              Sign In
+            </span>
+            <h1 className="mt-4 text-4xl font-bold tracking-[-0.03em] text-white">Welcome Back!</h1>
+            <p className="mt-3 max-w-[280px] text-sm leading-6 text-[#C4D0D8]">
               To sign in to an account, enter your email and password.
             </p>
           </div>
@@ -112,12 +117,13 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             {/* E-mail */}
             <div>
-              <label className="block text-sm text-[#E2EDF2]">E-mail</label>
+              <label className="block text-sm font-medium text-[#E2EDF2]">E-mail</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 w-full rounded-md border border-[#5C8A99] bg-transparent px-3 py-3 text-sm text-white outline-none focus:border-white"
+                className={fieldClassName}
+                placeholder="yourname@gmail.com"
                 disabled={isLoading}
               />
               {errors.email && (
@@ -127,13 +133,14 @@ const LoginPage = () => {
 
             {/* Password with eye icon */}
             <div>
-              <label className="block text-sm text-[#E2EDF2]">Password</label>
-              <div className="mt-2 flex items-center rounded-md border border-[#5C8A99] bg-transparent px-3 py-1 text-sm text-white focus-within:border-white">
+              <label className="block text-sm font-medium text-[#E2EDF2]">Password</label>
+              <div className="mt-2 flex items-center rounded-xl border border-[#5C8A99] bg-white/5 px-4 py-1 text-sm text-white transition focus-within:border-white focus-within:bg-white/10">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-transparent py-2 text-sm text-white outline-none"
+                  className="w-full bg-transparent py-2 text-sm text-white outline-none placeholder:text-[#AFC1C8]"
+                  placeholder="Enter your password"
                   disabled={isLoading}
                 />
                 <button
@@ -187,9 +194,9 @@ const LoginPage = () => {
 
             {/* credentials error under fields */}
             {errors.credentials && (
-              <p className="mt-1 text-xs text-red-300 text-center">
-                {errors.credentials}
-              </p>
+              <div className="rounded-xl border border-red-300/40 bg-red-900/20 px-3 py-3 text-center">
+                <p className="text-xs text-red-200">{errors.credentials}</p>
+              </div>
             )}
           </form>
 
@@ -198,7 +205,7 @@ const LoginPage = () => {
             <button
               type="button"
               onClick={() => navigate("/forgot-password")}
-              className="text-xs font-semibold text-[#E2EDF2] hover:underline"
+              className="text-xs font-semibold tracking-[0.08em] text-[#E2EDF2] hover:underline"
               disabled={isLoading}
             >
               Forgot Password?
@@ -208,7 +215,7 @@ const LoginPage = () => {
               type="submit"
               onClick={handleSubmit}
               disabled={isLoading}
-              className="w-3/4 rounded-full bg-[#A8B7C0] py-3 text-sm font-semibold text-[#265D6F] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-3/4 rounded-full bg-[#A8B7C0] py-3 text-sm font-semibold text-[#265D6F] shadow-[0_10px_24px_rgba(11,26,33,0.18)] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? "Signing in..." : "Continue"}
             </button>
@@ -221,7 +228,7 @@ const LoginPage = () => {
               type="button"
               onClick={() => navigate("/createaccount")}
               disabled={isLoading}
-              className="w-3/4 rounded-full bg-[#A8B7C0] py-3 text-sm font-semibold text-[#265D6F] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-3/4 rounded-full bg-[#A8B7C0] py-3 text-sm font-semibold text-[#265D6F] shadow-[0_10px_24px_rgba(11,26,33,0.18)] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Create an account
             </button>

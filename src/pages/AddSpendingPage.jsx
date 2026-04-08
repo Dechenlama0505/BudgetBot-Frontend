@@ -34,6 +34,7 @@ const AddSpendingPage = () => {
   const [category, setCategory] = useState("");
   const [date, setDate] = useState("");
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("neutral");
 
   useEffect(() => {
     categoryAPI.getCategories().then((res) => {
@@ -58,6 +59,7 @@ const AddSpendingPage = () => {
 
     if (!amount || amount <= 0) {
       const nextMessage = "Please enter an amount.";
+      setMessageType("error");
       setMessage(nextMessage);
       showError(nextMessage);
       return;
@@ -65,6 +67,7 @@ const AddSpendingPage = () => {
 
     if (!category) {
       const nextMessage = "Please select a category.";
+      setMessageType("error");
       setMessage(nextMessage);
       showError(nextMessage);
       return;
@@ -72,6 +75,7 @@ const AddSpendingPage = () => {
 
     if (!date) {
       const nextMessage = "Please select a date.";
+      setMessageType("error");
       setMessage(nextMessage);
       showError(nextMessage);
       return;
@@ -85,9 +89,11 @@ const AddSpendingPage = () => {
       setRawAmount("");
       setCategory("");
       setDate("");
+      setMessageType("success");
       setMessage(successMessage);
       showSuccess(successMessage);
     } catch (err) {
+      setMessageType("error");
       setMessage(showError(err, "Failed to add expense. Try again."));
     }
   };
@@ -114,18 +120,28 @@ const AddSpendingPage = () => {
       >
         <div className="flex-1 px-4 pt-5">
           <div
-            className="mb-4 flex items-center justify-center rounded-t-[24px] px-4 py-3"
+            className="mb-4 flex items-center justify-center rounded-[24px] px-4 py-4 shadow-[0_16px_32px_rgba(21,39,49,0.12)]"
             style={{ backgroundColor: topPanelBg }}
           >
-            <img
-              src="/budgetbotlogoHome.png"
-              alt="BudgetBot"
-              className="h-8 w-8 object-contain"
-            />
+            <div className="flex items-center gap-3">
+              <img
+                src="/budgetbotlogoHome.png"
+                alt="BudgetBot"
+                className="h-8 w-8 object-contain"
+              />
+              <div className="text-center">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: textSub }}>
+                  Add Spending
+                </p>
+                <p className="mt-1 text-sm font-semibold" style={{ color: textMain }}>
+                  Capture today&apos;s expense in seconds
+                </p>
+              </div>
+            </div>
           </div>
 
           <div
-            className="rounded-b-[24px] px-4 pb-4"
+            className="rounded-[24px] px-4 pb-5 pt-1 shadow-[0_14px_28px_rgba(21,39,49,0.08)]"
             style={{ backgroundColor: innerBg }}
           >
             <div className="mb-6 flex flex-col items-center pt-2">
@@ -136,7 +152,7 @@ const AddSpendingPage = () => {
                 NRP
               </span>
               <h1
-                className="mt-1 text-3xl font-bold tracking-wide"
+                className="mt-2 text-[34px] font-bold tracking-[0.01em]"
                 style={{ color: textMain }}
               >
                 NRP {displayAmount}
@@ -187,24 +203,41 @@ const AddSpendingPage = () => {
             </div>
 
             {message && (
-              <p className="mb-3 text-center text-sm" style={{ color: textSub }}>
+              <div
+                className="mb-4 rounded-[18px] border px-4 py-3 text-center text-sm"
+                style={{
+                  borderColor:
+                    messageType === "error" ? "#FCA5A5" : "#A7D7C5",
+                  backgroundColor:
+                    messageType === "error" ? "rgba(127,29,29,0.12)" : "rgba(16,185,129,0.12)",
+                  color: messageType === "error" ? "#FCA5A5" : textMain,
+                }}
+              >
                 {message}
-              </p>
+              </div>
             )}
 
             <button
               type="button"
               onClick={handleAddExpense}
-              className="mb-4 w-full rounded-md bg-[#265D6F] py-3 text-sm font-semibold text-[#E0E6E7]"
+              className="mb-4 w-full rounded-xl bg-[#265D6F] py-3 text-sm font-semibold text-[#E0E6E7] shadow-[0_12px_24px_rgba(11,26,33,0.14)] transition hover:translate-y-[-1px]"
             >
               Add Expense
             </button>
           </div>
 
           <div
-            className="mt-4 rounded-[24px] px-4 py-5"
+            className="mt-4 rounded-[24px] px-4 py-5 shadow-[0_14px_28px_rgba(21,39,49,0.08)]"
             style={{ backgroundColor: numpadBg }}
           >
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: textSub }}>
+                Quick keypad
+              </p>
+              <p className="text-[11px]" style={{ color: textSub }}>
+                Tap to enter amount
+              </p>
+            </div>
             <div className="grid grid-cols-3 gap-4">
               {["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].map(
                 (digit, index) => (
@@ -212,7 +245,7 @@ const AddSpendingPage = () => {
                     key={digit + index}
                     type="button"
                     onClick={() => handleKeyPress(digit)}
-                    className="flex h-16 items-center justify-center rounded-lg text-xl font-semibold"
+                    className="flex h-16 items-center justify-center rounded-2xl text-xl font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition hover:translate-y-[-1px]"
                     style={{ backgroundColor: numKeyBg, color: textMain }}
                   >
                     {digit}
@@ -225,7 +258,7 @@ const AddSpendingPage = () => {
               <button
                 type="button"
                 onClick={() => handleKeyPress("clear")}
-                className="flex h-16 items-center justify-center rounded-lg text-xl font-semibold"
+                className="flex h-16 items-center justify-center rounded-2xl text-xl font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition hover:translate-y-[-1px]"
                 style={{ backgroundColor: numKeyBg, color: textMain }}
               >
                 ⌫

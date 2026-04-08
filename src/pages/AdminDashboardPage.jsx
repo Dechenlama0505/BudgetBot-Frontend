@@ -73,6 +73,7 @@ const AdminDashboardPage = () => {
   const panelBg = darkMode ? "#21414D" : "#E0E6E7";
   const textMain = darkMode ? "#E4EDF2" : "#265D6F";
   const textSub = darkMode ? "#C2D3DB" : "#6E828D";
+  const sectionShadow = "0 16px 30px rgba(21,39,49,0.08)";
 
   const recentMembers = [...members].slice(0, 4);
 
@@ -99,7 +100,7 @@ const AdminDashboardPage = () => {
   return (
     <MobileAppFrame backgroundColor={containerBg} bottomNav={<AdminBottomNav />}>
       <div className="flex-1 overflow-y-auto px-4 pt-5 pb-4">
-        <section className="rounded-[28px] px-6 py-5" style={{ backgroundColor: cardBg }}>
+        <section className="rounded-[28px] px-6 py-5" style={{ backgroundColor: cardBg, boxShadow: sectionShadow }}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.2em]" style={{ color: textSub }}>
@@ -109,12 +110,12 @@ const AdminDashboardPage = () => {
                 Hello, {adminName}
               </h1>
               <p className="mt-2 text-sm" style={{ color: textSub }}>
-                Manage members.
+                Manage members with a clearer view of account health and activity.
               </p>
               <button
                 type="button"
                 onClick={() => navigate("/admin/members")}
-                className="mt-4 rounded-full bg-[#265D6F] px-4 py-2 text-xs font-semibold text-white"
+                className="mt-4 rounded-full bg-[#265D6F] px-4 py-2 text-xs font-semibold text-white shadow-[0_10px_24px_rgba(11,26,33,0.14)] transition hover:translate-y-[-1px]"
               >
                 + Add Member
               </button>
@@ -139,7 +140,7 @@ const AdminDashboardPage = () => {
             <div
               key={item.label}
               className="rounded-[22px] px-4 py-4"
-              style={{ backgroundColor: cardBg }}
+              style={{ backgroundColor: cardBg, boxShadow: "0 14px 28px rgba(21,39,49,0.06)" }}
             >
               <p className="text-[11px]" style={{ color: textSub }}>
                 {item.label}
@@ -151,7 +152,7 @@ const AdminDashboardPage = () => {
           ))}
         </section>
 
-        <section className="mt-4 rounded-[22px] px-5 py-4" style={{ backgroundColor: cardBg }}>
+        <section className="mt-4 rounded-[22px] px-5 py-4" style={{ backgroundColor: cardBg, boxShadow: sectionShadow }}>
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold" style={{ color: textMain }}>
               Recent Members
@@ -172,7 +173,7 @@ const AdminDashboardPage = () => {
                   key={member.id}
                   type="button"
                   onClick={() => handleOpenMember(member.id)}
-                  className="w-full rounded-[18px] px-4 py-4 text-left"
+                  className="w-full rounded-[18px] px-4 py-4 text-left transition hover:translate-y-[-1px]"
                   style={{ backgroundColor: panelBg }}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -198,7 +199,7 @@ const AdminDashboardPage = () => {
           )}
         </section>
 
-        <section className="mt-4 rounded-[22px] px-5 py-4" style={{ backgroundColor: cardBg }}>
+        <section className="mt-4 rounded-[22px] px-5 py-4" style={{ backgroundColor: cardBg, boxShadow: sectionShadow }}>
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold" style={{ color: textMain }}>
               Recent Activity

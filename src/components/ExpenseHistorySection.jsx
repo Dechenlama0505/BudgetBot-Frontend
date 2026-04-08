@@ -90,7 +90,7 @@ const ExpenseHistorySection = ({
   return (
     <section
       className="mt-4 mb-4 rounded-[24px] p-4"
-      style={{ backgroundColor: panelBg }}
+      style={{ backgroundColor: panelBg, boxShadow: "0 14px 28px rgba(21,39,49,0.07)" }}
     >
       <div className="flex items-center justify-between">
         <h3 className="text-base font-bold" style={{ color: textMain }}>
@@ -100,7 +100,7 @@ const ExpenseHistorySection = ({
 
       {expenses.length ? (
         <div className="mt-4 space-y-3">
-          <div className="flex items-center justify-between rounded-xl border px-4 py-3"
+          <div className="flex items-center justify-between rounded-[18px] border px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
             style={{
               backgroundColor: cardBg,
               borderColor: darkMode ? "#355B68" : "#D3DCE0",
@@ -143,7 +143,7 @@ const ExpenseHistorySection = ({
             return (
               <div
                 key={expense.id}
-                className="rounded-xl border p-4"
+                className="rounded-[18px] border p-4"
                 style={{
                   backgroundColor: cardBg,
                   borderColor: darkMode ? "#355B68" : "#D3DCE0",
@@ -179,6 +179,7 @@ const ExpenseHistorySection = ({
           style={{
             borderColor: darkMode ? "#355B68" : "#C4CFD4",
             color: textSub,
+            backgroundColor: cardBg,
           }}
         >
           No expense history yet.

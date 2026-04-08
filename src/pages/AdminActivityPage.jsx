@@ -38,6 +38,7 @@ const AdminActivityPage = () => {
   const panelBg = darkMode ? "#21414D" : "#E0E6E7";
   const textMain = darkMode ? "#E4EDF2" : "#265D6F";
   const textSub = darkMode ? "#C2D3DB" : "#6E828D";
+  const sectionShadow = "0 16px 30px rgba(21,39,49,0.08)";
 
   return (
     <MobileAppFrame
@@ -47,7 +48,7 @@ const AdminActivityPage = () => {
       <div className="flex-1 overflow-y-auto px-4 pt-5 pb-4">
         <section
           className="rounded-[28px] px-5 py-5"
-          style={{ backgroundColor: cardBg }}
+          style={{ backgroundColor: cardBg, boxShadow: sectionShadow }}
         >
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -80,7 +81,7 @@ const AdminActivityPage = () => {
 
         <section
           className="mt-4 rounded-[22px] px-5 py-4"
-          style={{ backgroundColor: cardBg }}
+          style={{ backgroundColor: cardBg, boxShadow: sectionShadow }}
         >
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold" style={{ color: textMain }}>
@@ -93,7 +94,7 @@ const AdminActivityPage = () => {
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#265D6F] border-t-transparent" />
             </div>
           ) : error ? (
-            <p className="mt-4 text-sm text-red-600">{error}</p>
+            <div className="mt-4 rounded-[18px] border border-red-300 bg-red-100/80 px-4 py-3 text-sm text-red-700">{error}</div>
           ) : activity.length ? (
             <div className="mt-3 space-y-3">
               {activity.map((entry, index) => (
