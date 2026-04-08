@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import MobileAppFrame from "../components/MobileAppFrame";
 import SuperAdminBottomNav from "../components/SuperAdminBottomNav";
 import { authAPI } from "../services/authAPI";
@@ -8,6 +9,7 @@ import { useTheme } from "../context/ThemeContext";
 import { showError } from "../utils/toastUtils";
 
 const SuperAdminDashboardPage = () => {
+  const navigate = useNavigate();
   const { darkMode } = useTheme();
   const [displayName, setDisplayName] = useState("Superadmin");
   const [membersCount, setMembersCount] = useState(0);
@@ -120,6 +122,13 @@ const SuperAdminDashboardPage = () => {
             <h2 className="text-sm font-semibold" style={{ color: textMain }}>
               Recent Activity
             </h2>
+            <button
+              type="button"
+              onClick={() => navigate("/superadmin/activity")}
+              className="rounded-full border border-[#265D6F] px-3 py-1 text-[11px] font-semibold text-[#265D6F]"
+            >
+              View All
+            </button>
           </div>
 
           {error ? (
