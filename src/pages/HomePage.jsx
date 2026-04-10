@@ -64,7 +64,7 @@ const HomePage = () => {
   const [predictionLoading, setPredictionLoading] = useState(false);
   const [predictionError, setPredictionError] = useState("");
   const [predictionInfo, setPredictionInfo] = useState("");
-  const [topPrediction, setTopPrediction] = useState(null);
+  const [homeAlerts, setHomeAlerts] = useState([]);
 
   const currentMonth = useMemo(() => getCurrentMonth(), []);
 
@@ -139,12 +139,24 @@ const HomePage = () => {
       setPredictionInfo("");
       const response = await insightsAPI.getBudgetPredictions(selectedMonth);
       const predictions = Array.isArray(response.data) ? response.data : [];
-      setTopPrediction(getTopPrediction(predictions));
+      const homeAlertsFromApi = Array.isArray(response.homeAlerts)
+        ? response.homeAlerts
+        : response.homeAlert
+        ? [response.homeAlert]
+        : [];
+
+      if (homeAlertsFromApi.length > 0) {
+        setHomeAlerts(homeAlertsFromApi);
+      } else {
+        const topPrediction = getTopPrediction(predictions);
+        setHomeAlerts(topPrediction ? [topPrediction] : []);
+      }
+
       if (response.budgetRequired && response.message) {
         setPredictionInfo(response.message);
       }
     } catch (error) {
-      setTopPrediction(null);
+      setHomeAlerts([]);
       setPredictionInfo("");
       setPredictionError(error.message || "Failed to load AI insight");
     } finally {
@@ -443,10 +455,21 @@ const HomePage = () => {
                   <p className="mt-3 text-[11px] leading-5" style={{ color: textSub }}>
                     {predictionInfo}
                   </p>
-                ) : topPrediction ? (
-                  <p className="mt-3 text-[11px] leading-5" style={{ color: textSub }}>
-                    {topPrediction.message}
-                  </p>
+                ) : homeAlerts.length > 0 ? (
+                  <div className="mt-3 space-y-2">
+                    {homeAlerts.map((item, idx) => (
+                      <div
+                        key={`${item.category}-${idx}`}
+                        className="rounded-[14px] border px-3 py-2 text-[11px] leading-5"
+                        style={{ ...stateCardStyle, color: textSub }}
+                      >
+                        <p className="font-semibold" style={{ color: textMain }}>
+                          {item.category === "Overall" ? item.status : `${item.category} · ${item.status}`}
+                        </p>
+                        <p className="mt-1">{item.message}</p>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
                   <div className="mt-3 rounded-[16px] border border-dashed px-3 py-3 text-[11px]" style={{ ...stateCardStyle, color: textSub }}>
                     No AI insights available for this month.
@@ -454,7 +477,7 @@ const HomePage = () => {
                 )}
               </div>
 
-              {!predictionLoading && !predictionError && topPrediction && (
+              {!predictionLoading && !predictionError && homeAlerts.length > 0 && (
                 <button
                   type="button"
                   onClick={() => navigate("/insight")}

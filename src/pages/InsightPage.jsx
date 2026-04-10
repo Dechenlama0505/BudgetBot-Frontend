@@ -600,30 +600,19 @@ const InsightPage = () => {
                         style={{ color: textSub }}
                       >
                         <div className="rounded-lg px-3 py-2" style={{ backgroundColor: darkMode ? "#274956" : "#DCE4E8" }}>
-                          <p>Budget</p>
-                          <p className="mt-1 text-sm font-semibold" style={{ color: textMain }}>
-                            Rs. {formatCurrency(item.budget)}
-                          </p>
-                        </div>
-                        <div className="rounded-lg px-3 py-2" style={{ backgroundColor: darkMode ? "#274956" : "#DCE4E8" }}>
-                          <p>Spent so far</p>
-                          <p className="mt-1 text-sm font-semibold" style={{ color: textMain }}>
-                            Rs. {formatCurrency(item.spentSoFar)}
-                          </p>
-                        </div>
-                        <div className="rounded-lg px-3 py-2" style={{ backgroundColor: darkMode ? "#274956" : "#DCE4E8" }}>
                           <p>Predicted final spend</p>
                           <p className="mt-1 text-sm font-semibold" style={{ color: textMain }}>
                             Rs. {formatCurrency(item.predictedFinalSpend)}
                           </p>
                         </div>
                         <div className="rounded-lg px-3 py-2" style={{ backgroundColor: darkMode ? "#274956" : "#DCE4E8" }}>
-                          <p>Overrun</p>
+                          <p>Predicted overrun</p>
                           <p className="mt-1 text-sm font-semibold" style={{ color: tone.text }}>
                             {Number(item.overrunPercent || 0)}%
                           </p>
                         </div>
                       </div>
+
 
                       <p
                         className="mt-4 text-xs leading-5"
