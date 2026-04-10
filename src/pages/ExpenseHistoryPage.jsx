@@ -54,11 +54,11 @@ const ExpenseHistoryPage = () => {
 
   return (
     <div
-      className="flex min-h-screen w-full justify-center sm:px-4 sm:py-6"
+      className="flex min-h-dvh w-full items-start justify-center sm:px-4"
       style={{ backgroundColor: containerBg }}
     >
       <div
-        className="flex min-h-screen w-full flex-col sm:min-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-3rem)] sm:max-w-[430px] sm:rounded-[32px] sm:shadow-[0_20px_40px_rgba(0,0,0,0.25)]"
+        className="flex min-h-dvh w-full flex-col sm:min-h-dvh sm:max-h-dvh sm:max-w-[430px] sm:rounded-[32px] sm:shadow-[0_20px_40px_rgba(0,0,0,0.25)]"
         style={{ backgroundColor: cardBg }}
       >
         <div className="flex-1 overflow-y-auto px-4 pt-6">

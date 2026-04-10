@@ -83,9 +83,9 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full justify-center bg-[#E0E6E7] sm:px-4 sm:py-6">
+    <div className="flex min-h-dvh w-full items-start justify-center bg-[#E0E6E7] sm:px-4">
       {/* APP SCREEN FRAME */}
-      <div className="relative flex min-h-screen w-full flex-col overflow-hidden bg-[#265D6F] sm:min-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-3rem)] sm:max-w-[430px] sm:rounded-[32px] sm:shadow-[0_20px_40px_rgba(0,0,0,0.25)]">
+      <div className="relative flex min-h-dvh w-full flex-col overflow-hidden bg-[#265D6F] sm:min-h-dvh sm:max-h-dvh sm:max-w-[430px] sm:rounded-[32px] sm:shadow-[0_20px_40px_rgba(0,0,0,0.25)]">
         {/* top grey block + wave, same as signup */}
         <div className="relative h-44 bg-[#A8B7C0]">
           <svg
