@@ -480,7 +480,7 @@ const HomePage = () => {
               {!predictionLoading && !predictionError && homeAlerts.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => navigate("/insight")}
+                  onClick={() => navigate("/insight#ai-forecast")}
                   className="shrink-0 rounded-full bg-[#265D6F] px-3 py-2 text-[11px] font-semibold text-[#E0E6E7]"
                 >
                   View Insights

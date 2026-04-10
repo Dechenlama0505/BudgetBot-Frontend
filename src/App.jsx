@@ -12,6 +12,7 @@ import ProfilePage from "./pages/ProfilePage";
 import CreateAccount from "./pages/CreateAccountPage";
 import EditProfilePage from "./pages/EditProfilePage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
+import ExpenseHistoryPage from "./pages/ExpenseHistoryPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
@@ -48,6 +49,7 @@ const App = () => {
         <Route element={<UserRoute />}>
           <Route path="/home" element={<HomePage />} />
           <Route path="/insight" element={<InsightPage />} />
+          <Route path="/expense-history" element={<ExpenseHistoryPage />} />
           <Route path="/addspending" element={<AddSpendingPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/profile" element={<ProfilePage />} />

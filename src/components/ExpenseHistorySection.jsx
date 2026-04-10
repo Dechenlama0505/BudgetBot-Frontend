@@ -57,6 +57,8 @@ const ExpenseHistorySection = ({
   panelBg,
   cardBg,
   categoryColors = {},
+  onViewAll,
+  viewAllLabel = "View All",
 }) => {
   const groupedExpenses = expenses.reduce((groups, expense) => {
     const monthKey = getExpenseMonthKey(expense.date);
@@ -96,6 +98,20 @@ const ExpenseHistorySection = ({
         <h3 className="text-base font-bold" style={{ color: textMain }}>
           {title}
         </h3>
+        {onViewAll ? (
+          <button
+            type="button"
+            onClick={onViewAll}
+            className="rounded-full border px-3 py-1 text-[11px] font-semibold"
+            style={{
+              borderColor: darkMode ? "#355B68" : "#D3DCE0",
+              color: textMain,
+              backgroundColor: darkMode ? "#274956" : "#F1F5F6",
+            }}
+          >
+            {viewAllLabel}
+          </button>
+        ) : null}
       </div>
 
       {expenses.length ? (

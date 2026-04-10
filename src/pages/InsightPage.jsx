@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useExpenses } from "../context/ExpenseContext";
 import { insightsAPI, getCurrentMonth } from "../services/insightsAPI";
@@ -47,6 +48,10 @@ const getPredictionStatusTone = (prediction) => {
 };
 
 const InsightPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const scrollContainerRef = useRef(null);
+  const aiForecastRef = useRef(null);
   const { darkMode } = useTheme();
   const { categoryColors, expenseRefreshKey } = useExpenses();
 
@@ -100,6 +105,21 @@ const InsightPage = () => {
       })
       .finally(() => setPredictionLoading(false));
   }, [selectedMonth, expenseRefreshKey]);
+
+  useEffect(() => {
+    if (location.hash === "#ai-forecast") {
+      const timer = setTimeout(() => {
+        if (aiForecastRef.current) {
+          aiForecastRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      }, 120);
+
+      return () => clearTimeout(timer);
+    }
+  }, [location.hash, selectedMonth, predictionLoading]);
 
   useEffect(() => {
     setHistoryLoading(true);
@@ -189,7 +209,7 @@ const InsightPage = () => {
         className="flex h-[896px] w-[414px] max-w-full flex-col rounded-[32px] shadow-[0_20px_40px_rgba(0,0,0,0.25)]"
         style={{ backgroundColor: cardBg }}
       >
-        <div className="flex-1 overflow-y-auto px-4 pt-6">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 pt-6">
           <h1
             className="text-center text-xl font-bold"
             style={{ color: textMain }}
@@ -516,6 +536,8 @@ const InsightPage = () => {
           </div>
 
           <div
+            id="ai-forecast"
+            ref={aiForecastRef}
             className="relative mt-4 mb-4 rounded-[24px] p-4"
             style={{ backgroundColor: panelBg, boxShadow: sectionShadow }}
           >
@@ -631,13 +653,15 @@ const InsightPage = () => {
             title={
               historyLoading ? "Expense History" : "Expense History"
             }
-            expenses={historyError ? [] : expenseHistory}
+            expenses={historyError ? [] : expenseHistory.slice(0, 5)}
             darkMode={darkMode}
             textMain={textMain}
             textSub={textSub}
             panelBg={panelBg}
             cardBg={darkMode ? "#1E3A45" : "#E8EDF0"}
             categoryColors={categoryColors}
+            onViewAll={() => navigate("/expense-history")}
+            viewAllLabel="View All"
           />
           {historyLoading ? (
             <div className="mt-[-4px] mb-4 rounded-[18px] border px-4 py-3 text-center text-sm" style={{ backgroundColor: darkMode ? "#274956" : "#F1F5F6", borderColor: darkMode ? "#355B68" : "#D7E0E4", color: textSub }}>
