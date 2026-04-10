@@ -145,11 +145,11 @@ const CategoriesPage = () => {
 
   return (
     <div
-      className="flex min-h-dvh w-full items-start justify-center sm:px-4"
+      className="flex h-dvh min-h-dvh w-full items-start justify-center sm:px-4"
       style={{ backgroundColor: containerBg }}
     >
       <div
-        className="relative flex min-h-dvh w-full flex-col overflow-hidden sm:min-h-dvh sm:max-h-dvh sm:max-w-[430px] sm:rounded-[32px] sm:shadow-[0_20px_40px_rgba(0,0,0,0.25)]"
+        className="relative flex h-dvh min-h-dvh w-full flex-col overflow-hidden sm:h-dvh sm:min-h-dvh sm:max-h-dvh sm:max-w-[430px] sm:rounded-[32px] sm:shadow-[0_20px_40px_rgba(0,0,0,0.25)]"
         style={{ backgroundColor: containerBg }}
       >
         <div className="flex items-center justify-center rounded-t-[32px] px-4 py-3" style={{ backgroundColor: panelBg }}>

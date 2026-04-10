@@ -124,8 +124,8 @@ const ResetPasswordPage = () => {
     );
 
   return (
-    <div className="flex min-h-dvh w-full items-start justify-center bg-[#E0E6E7] sm:px-4">
-      <div className="relative flex min-h-dvh w-full flex-col overflow-hidden bg-[#265D6F] sm:min-h-dvh sm:max-h-dvh sm:max-w-[430px] sm:rounded-[32px] sm:shadow-[0_20px_40px_rgba(0,0,0,0.25)]">
+    <div className="flex h-dvh min-h-dvh w-full items-start justify-center bg-[#E0E6E7] sm:px-4">
+      <div className="relative flex h-dvh min-h-dvh w-full flex-col overflow-hidden bg-[#265D6F] sm:h-dvh sm:min-h-dvh sm:max-h-dvh sm:max-w-[430px] sm:rounded-[32px] sm:shadow-[0_20px_40px_rgba(0,0,0,0.25)]">
         <div className="relative h-44 bg-[#A8B7C0]">
           <svg
             className="absolute bottom-0 left-0 right-0 h-24 w-full"
