@@ -171,7 +171,7 @@ const SuperAdminMembersPage = () => {
                 Manage Members
               </h1>
               <p className="mt-2 text-sm" style={{ color: textSub }}>
-                Full CRUD for member accounts with the same card and form patterns.
+                Full CRUD for member accounts.
               </p>
             </div>
             <button

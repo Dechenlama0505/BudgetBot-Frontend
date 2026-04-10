@@ -86,7 +86,7 @@ const SuperAdminDashboardPage = () => {
                 Hello, {displayName}
               </h1>
               <p className="mt-2 text-sm" style={{ color: textSub }}>
-                Oversee members and admins from the same mobile-first interface.
+                Oversee members and admins.
               </p>
             </div>
             <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[#2A5B6C]">

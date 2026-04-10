@@ -136,13 +136,13 @@ const SuperAdminAdminsPage = () => {
         );
         showSuccess(
           response.data?.message ||
-            `${editingAccount.role === "superadmin" ? "Super admin" : "Admin"} updated successfully`
+          `${editingAccount.role === "superadmin" ? "Super admin" : "Admin"} updated successfully`
         );
       } else {
         const response = await adminManagementAPI.createAdmin(formValues);
         showSuccess(
           response.data?.message ||
-            `${formValues.role === "superadmin" ? "Super admin" : "Admin"} created successfully`
+          `${formValues.role === "superadmin" ? "Super admin" : "Admin"} created successfully`
         );
       }
 
@@ -164,7 +164,7 @@ const SuperAdminAdminsPage = () => {
       const response = await adminManagementAPI.deleteAdmin(account.id, account.role);
       showSuccess(
         response.data?.message ||
-          `${account.role === "superadmin" ? "Super admin" : "Admin"} deleted successfully`
+        `${account.role === "superadmin" ? "Super admin" : "Admin"} deleted successfully`
       );
       loadAccounts(search);
     } catch (deleteError) {
@@ -194,7 +194,7 @@ const SuperAdminAdminsPage = () => {
                 Manage Admin Accounts
               </h1>
               <p className="mt-2 text-sm" style={{ color: textSub }}>
-                Create, update, and delete admin and super admin accounts without changing the app style.
+                Create, update, and delete admin and super admin accounts.
               </p>
             </div>
             <button
