@@ -5,8 +5,8 @@ const LandingPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#E0E6E7]">
-      <div className="relative flex h-[896px] w-[414px] max-w-full flex-col overflow-hidden rounded-[32px] bg-[#A8B7C0] shadow-[0_20px_40px_rgba(0,0,0,0.25)]">
+    <div className="flex min-h-screen w-full justify-center bg-[#E0E6E7] sm:px-4 sm:py-6">
+      <div className="relative flex min-h-screen w-full flex-col overflow-hidden bg-[#A8B7C0] sm:min-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-3rem)] sm:max-w-[430px] sm:rounded-[32px] sm:shadow-[0_20px_40px_rgba(0,0,0,0.25)]">
         <div className="flex flex-1 flex-col items-center justify-center px-8 pb-[300px] pt-10">
           <img
             src="/budgetBotLogo.png"

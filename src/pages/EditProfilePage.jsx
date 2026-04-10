@@ -188,11 +188,11 @@ const EditProfilePage = () => {
 
   return (
     <div
-      className="flex min-h-screen items-center justify-center"
+      className="flex min-h-screen w-full justify-center sm:px-4 sm:py-6"
       style={{ backgroundColor: containerBg }}
     >
       <div
-        className="relative flex h-[896px] w-[414px] max-w-full flex-col rounded-[32px] shadow-[0_20px_40px_rgba(0,0,0,0.25)]"
+        className="relative flex min-h-screen w-full flex-col sm:min-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-3rem)] sm:max-w-[430px] sm:rounded-[32px] sm:shadow-[0_20px_40px_rgba(0,0,0,0.25)]"
         style={{ backgroundColor: containerBg }}
       >
         {/* top app bar */}

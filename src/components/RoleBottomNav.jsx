@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 
 const RoleBottomNav = ({ items }) => {
   return (
-    <nav className="h-20 w-full rounded-b-[32px] bg-[#E0E6E7] px-6">
+    <nav className="h-20 w-full border-t border-[#D3DCE0] bg-[#E0E6E7] px-6 sm:rounded-b-[32px] sm:border-t-0">
       <div className="flex h-full items-center justify-between">
         {items.map((item) => (
           <NavLink
