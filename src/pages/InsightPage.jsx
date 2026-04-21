@@ -100,8 +100,13 @@ const InsightPage = () => {
       })
       .catch((error) => {
         setPredictions([]);
-        setPredictionInfo("");
-        setPredictionError(error.message || "Failed to load AI budget forecast");
+        if (error.aiUnavailable) {
+          setPredictionInfo(error.message || "AI forecast is warming up. Please try again shortly.");
+          setPredictionError("");
+        } else {
+          setPredictionInfo("");
+          setPredictionError(error.message || "Failed to load AI budget forecast");
+        }
       })
       .finally(() => setPredictionLoading(false));
   }, [selectedMonth, expenseRefreshKey]);

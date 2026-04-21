@@ -59,6 +59,10 @@ const ExpenseHistorySection = ({
   categoryColors = {},
   onViewAll,
   viewAllLabel = "View All",
+  onEditExpense,
+  onDeleteExpense,
+  editingExpenseId = null,
+  deletingExpenseId = null,
 }) => {
   const groupedExpenses = expenses.reduce((groups, expense) => {
     const monthKey = getExpenseMonthKey(expense.date);
@@ -116,7 +120,8 @@ const ExpenseHistorySection = ({
 
       {expenses.length ? (
         <div className="mt-4 space-y-3">
-          <div className="flex items-center justify-between rounded-[18px] border px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+          <div
+            className="flex items-center justify-between rounded-[18px] border px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
             style={{
               backgroundColor: cardBg,
               borderColor: darkMode ? "#355B68" : "#D3DCE0",
@@ -155,6 +160,8 @@ const ExpenseHistorySection = ({
 
           {visibleExpenses.map((expense) => {
             const dotColor = categoryColors[expense.category] || "#265D6F";
+            const isEditing = editingExpenseId === expense.id;
+            const isDeleting = deletingExpenseId === expense.id;
 
             return (
               <div
@@ -181,9 +188,45 @@ const ExpenseHistorySection = ({
                     </div>
                   </div>
 
-                  <p className="text-sm font-semibold" style={{ color: textMain }}>
-                    NPR {formatCurrency(expense.amount)}
-                  </p>
+                  <div className="flex min-w-[132px] flex-col items-end gap-2">
+                    <p className="text-sm font-semibold" style={{ color: textMain }}>
+                      NPR {formatCurrency(expense.amount)}
+                    </p>
+
+                    <div className="flex flex-wrap justify-end gap-2">
+                      {onEditExpense ? (
+                        <button
+                          type="button"
+                          onClick={() => onEditExpense(expense)}
+                          disabled={isEditing || isDeleting}
+                          className="rounded-full border px-3 py-1 text-[11px] font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+                          style={{
+                            borderColor: darkMode ? "#355B68" : "#B6C8CF",
+                            color: textMain,
+                            backgroundColor: darkMode ? "#315764" : "#F5FAFB",
+                          }}
+                        >
+                          {isEditing ? "Saving..." : "Update"}
+                        </button>
+                      ) : null}
+
+                      {onDeleteExpense ? (
+                        <button
+                          type="button"
+                          onClick={() => onDeleteExpense(expense)}
+                          disabled={isEditing || isDeleting}
+                          className="rounded-full border px-3 py-1 text-[11px] font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+                          style={{
+                            borderColor: darkMode ? "#7F1D1D" : "#F2B8B5",
+                            color: darkMode ? "#FECACA" : "#B42318",
+                            backgroundColor: darkMode ? "rgba(127,29,29,0.18)" : "#FFF1F0",
+                          }}
+                        >
+                          {isDeleting ? "Deleting..." : "Delete"}
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
                 </div>
               </div>
             );

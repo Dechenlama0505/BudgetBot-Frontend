@@ -158,7 +158,7 @@ const HomePage = () => {
     } catch (error) {
       setHomeAlerts([]);
       setPredictionInfo("");
-      setPredictionError(error.message || "Failed to load AI insight");
+      setPredictionError(error.message || "AI Failed");
     } finally {
       setPredictionLoading(false);
     }
@@ -194,7 +194,7 @@ const HomePage = () => {
   const maxBudget = monthlyIncome ?? 0;
   const budgetUsedPct = totalBudget > 0 ? Math.min(100, (monthExpenses / totalBudget) * 100) : 0;
   const remaining = (monthlyIncome ?? 0) - monthExpenses;
-  /** Rs. next to sliders: use saved total budget, or preview as % of income until user sets total */
+  // Rs. next to sliders: use saved total budget, or preview as % of income until user sets total */
   const budgetBaseForCategoryDisplay =
     totalBudget > 0 ? totalBudget : maxBudget > 0 ? maxBudget : 0;
 

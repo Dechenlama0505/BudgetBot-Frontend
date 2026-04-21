@@ -121,6 +121,29 @@ export const ExpenseProvider = ({ children }) => {
     []
   );
 
+  const deleteExpense = useCallback(
+    async (expenseId) => {
+      const res = await expenseAPI.deleteExpense(expenseId);
+      await refreshExpenses();
+      return res;
+    },
+    [refreshExpenses]
+  );
+
+  const updateExpense = useCallback(
+    async ({ expenseId, amount, category, date }) => {
+      const res = await expenseAPI.updateExpense({
+        expenseId,
+        amount,
+        category,
+        date,
+      });
+      await refreshExpenses();
+      return res;
+    },
+    [refreshExpenses]
+  );
+
   const updateCategoryColor = (category, color) => {
     setCategoryColors((prev) => ({
       ...prev,
@@ -143,6 +166,8 @@ export const ExpenseProvider = ({ children }) => {
     () => ({
       expenses,
       addExpense,
+      deleteExpense,
+      updateExpense,
       totalExpenses,
       categoryBreakdown,
       categoryColors,
@@ -155,6 +180,8 @@ export const ExpenseProvider = ({ children }) => {
     [
       expenses,
       addExpense,
+      deleteExpense,
+      updateExpense,
       totalExpenses,
       categoryBreakdown,
       categoryColors,

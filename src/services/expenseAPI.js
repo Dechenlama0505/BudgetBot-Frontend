@@ -27,6 +27,39 @@ export const expenseAPI = {
     return data;
   },
 
+  deleteExpense: async (expenseId) => {
+    const response = await fetch(`${API_BASE_URL}/api/expenses/${expenseId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to delete expense");
+    }
+
+    return data;
+  },
+
+  updateExpense: async ({ expenseId, amount, category, date }) => {
+    const response = await fetch(`${API_BASE_URL}/api/expenses/${expenseId}`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        amount: Number(amount),
+        category: category?.trim() || "Others",
+        date,
+      }),
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to update expense");
+    }
+
+    return data;
+  },
+
   getExpenses: async (options = {}) => {
     const { month, all } = options;
     const params = new URLSearchParams();

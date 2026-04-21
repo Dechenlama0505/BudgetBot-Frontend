@@ -1,6 +1,14 @@
 import { API_BASE_URL } from "./authAPI";
 import { tokenService } from "./tokenService";
 
+const buildApiError = (data, fallbackMessage) => {
+  const error = new Error(data?.message || fallbackMessage);
+  if (data?.aiUnavailable) {
+    error.aiUnavailable = true;
+  }
+  return error;
+};
+
 const getAuthHeaders = () => {
   const token = tokenService.getToken();
   return {
@@ -25,7 +33,7 @@ export const insightsAPI = {
     });
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.message || "Failed to get insights");
+      throw buildApiError(data, "Failed to get insights");
     }
     return data;
   },
@@ -37,7 +45,7 @@ export const insightsAPI = {
     });
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.message || "Failed to get income vs spending");
+      throw buildApiError(data, "Failed to get income vs spending");
     }
     return data;
   },
@@ -50,7 +58,7 @@ export const insightsAPI = {
     });
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.message || "Failed to get budget predictions");
+      throw buildApiError(data, "Failed to get budget predictions");
     }
     return data;
   },

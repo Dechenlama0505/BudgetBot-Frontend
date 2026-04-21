@@ -46,12 +46,17 @@ const AdminDashboardPage = () => {
         : [];
 
       setStats({
-        totalUsers: dashboardStats.totalUsers ?? nextMembers.length,
+        totalUsers:
+          dashboardStats.totalUsers ??
+          dashboardStats.totalMembers ??
+          nextMembers.length,
         activeUsers:
           dashboardStats.activeUsers ??
+          dashboardStats.activeMembers ??
           nextMembers.filter((member) => member.status === "active").length,
         inactiveUsers:
           dashboardStats.inactiveUsers ??
+          dashboardStats.inactiveMembers ??
           nextMembers.filter((member) => member.status === "inactive").length,
         totalAdmins: dashboardStats.totalAdmins ?? 0,
       });

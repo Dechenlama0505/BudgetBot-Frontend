@@ -143,7 +143,6 @@ const EditProfilePage = () => {
 
       const successMessage =
         response.data?.message || "Profile updated successfully!";
-      setSuccessMessage(successMessage);
       showSuccess(successMessage);
 
       const updatedUser = response.data.user;
